@@ -46,3 +46,19 @@ export const signIn = async (email: string, password: string): Promise<{ user: U
     return { user: null, error: 'Ocorreu um erro inesperado durante o login' };
   }
 };
+
+export const signOut = async (): Promise<{ error: AuthError | null }> => {
+  try {
+    const { error } = await supabase.auth.signOut();
+    
+    // Limpar o estado local independentemente do resultado da API
+    localStorage.removeItem('supabase.auth.token');
+    
+    if (error) throw error;
+    return { error: null };
+  } catch (err) {
+    console.error('Erro inesperado durante o logout:', err);
+    // Retornar null para indicar que o logout local foi bem-sucedido
+    return { error: null };
+  }
+};

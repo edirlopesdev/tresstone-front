@@ -7,6 +7,8 @@ import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "../../lib/utils"
 
+import { useToast } from "./use-toast"
+
 const ToastProvider = ToastPrimitives.Provider
 
 const ToastViewport = React.forwardRef<
@@ -43,7 +45,8 @@ const toastVariants = cva(
 const Toast = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Root>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root> &
-    VariantProps<typeof toastVariants>
+    VariantProps<typeof toastVariants> &
+    { variant?: "default" | "destructive" }
 >(({ className, variant, ...props }, ref) => {
   return (
     <ToastPrimitives.Root
@@ -127,3 +130,5 @@ export {
   ToastClose,
   ToastAction,
 }
+
+export { useToast }

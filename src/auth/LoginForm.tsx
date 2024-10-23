@@ -12,6 +12,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { AuthError } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
+import { Toast } from "../components/ui/toast";
+import { useToast } from "../components/ui/use-toast";
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 type RegisterFormValues = z.infer<typeof registerSchema>;
@@ -21,6 +23,7 @@ export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [empresaId, setEmpresaId] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -54,14 +57,21 @@ export function LoginForm() {
       const { user, error } = await signIn(data.email, data.password);
       if (user) {
         console.log("Login bem-sucedido:", user);
-        navigate('/dashboard'); // Navega para o dashboard após login bem-sucedido
+        navigate('/dashboard');
       } else {
-        console.error("Erro no login:", error);
-        alert(error || "Falha no login. Verifique suas credenciais.");
+        toast({
+          title: "Erro no login",
+          description: error || "Falha no login. Verifique suas credenciais.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error("Erro inesperado no login:", error);
-      alert("Ocorreu um erro inesperado durante o login.");
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro inesperado durante o login.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -70,7 +80,6 @@ export function LoginForm() {
   const onEmpresaSubmit = async (data: EmpresaFormValues) => {
     setIsLoading(true);
     try {
-      // Cadastrar a empresa
       const { data: empresaData, error: empresaError } = await supabase
         .from('empresas')
         .insert({ nome: data.nome })
@@ -79,7 +88,6 @@ export function LoginForm() {
 
       if (empresaError) throw empresaError;
 
-      // Registrar o usuário administrador
       const { user, error: userError } = await signUp(data.email, data.password, {
         empresa_id: empresaData.id,
         nome: data.nome,
@@ -90,14 +98,18 @@ export function LoginForm() {
 
       setEmpresaId(empresaData.id);
       console.log("Empresa e usuário administrador registrados com sucesso");
-      alert("Empresa e usuário administrador registrados com sucesso. Por favor, faça login.");
+      toast({
+        title: "Sucesso",
+        description: "Empresa e usuário administrador registrados com sucesso. Por favor, faça login.",
+        variant: "default",
+      });
     } catch (error) {
       console.error("Erro no registro da empresa e usuário:", error);
-      if (error instanceof Error) {
-        alert(`Erro no registro: ${error.message}`);
-      } else {
-        alert("Ocorreu um erro desconhecido durante o registro.");
-      }
+      toast({
+        title: "Erro",
+        description: error instanceof Error ? `Erro no registro: ${error.message}` : "Ocorreu um erro desconhecido durante o registro.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -108,28 +120,30 @@ export function LoginForm() {
     try {
       const { user, error } = await signUp(data.email, data.password, {
         empresa_id: empresaId,
-        nome: data.email.split('@')[0], // Usando parte do email como nome temporário
+        nome: data.email.split('@')[0],
         cargo: 'Usuário'
       });
       if (error) throw new Error(error);
       console.log("Registro bem-sucedido:", user);
-      alert("Registro bem-sucedido. Por favor, faça login.");
-      // Redirecionar para a aba de login
-      // document.querySelector('[data-state="inactive"][data-value="login"]')?.click();
+      toast({
+        title: "Sucesso",
+        description: "Registro bem-sucedido. Por favor, faça login.",
+        variant: "default",
+      });
     } catch (error) {
       console.error("Erro no registro:", error);
-      if (error instanceof Error) {
-        alert(`Erro no registro: ${error.message}`);
-      } else {
-        alert("Ocorreu um erro desconhecido durante o registro.");
-      }
+      toast({
+        title: "Erro",
+        description: error instanceof Error ? `Erro no registro: ${error.message}` : "Ocorreu um erro desconhecido durante o registro.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <Card className="w-full shadow-md">
+    <Card className="w-full max-w-md mx-auto mt-8 shadow-md">
       <CardHeader className="text-center">
         <CardTitle className="text-2xl font-bold mb-2">Autenticação</CardTitle>
         <CardDescription>Faça login ou crie uma nova conta.</CardDescription>

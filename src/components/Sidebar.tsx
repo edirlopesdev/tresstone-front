@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   Home, 
   Users, 
@@ -28,6 +28,7 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
+import { signOut } from '../auth/auth';
 
 const menuItems = [
   { title: "Dashboard", icon: Home, url: "/dashboard" },
@@ -55,6 +56,7 @@ const menuItems = [
 const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const navigate = useNavigate();
 
   const toggleSubmenu = (title: string) => {
     setExpandedItems(prev => 
@@ -62,6 +64,17 @@ const Sidebar = () => {
         ? prev.filter(item => item !== title) 
         : [...prev, title]
     );
+  };
+
+  const handleLogout = async () => {
+    try {
+      const { error } = await signOut();
+      if (error) throw error;
+      navigate('/login');
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+      // Aqui você pode adicionar uma notificação de erro para o usuário
+    }
   };
 
   return (
@@ -148,7 +161,7 @@ const Sidebar = () => {
               Notifications
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem icon={<LogOut className="h-4 w-4" />}>
+            <DropdownMenuItem icon={<LogOut className="h-4 w-4" />} onClick={handleLogout} className="cursor-pointer hover:bg-gray-100">
               Log out
             </DropdownMenuItem>
           </DropdownMenuContent>
