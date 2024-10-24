@@ -6,6 +6,12 @@ import LoginForm from './auth/LoginForm';
 import { supabase } from './supabaseClient';
 import { User } from '@supabase/supabase-js';
 import { ToastProvider } from './components/ui/toast';
+import { AgendamentosPage } from './pages/Agendamentos';
+import { ClientesPage } from './pages/Clientes';
+import { HistoricoColoracaoPage } from './pages/HistoricoColoracao';
+import { PerfisPage } from './pages/Perfis';
+import { PlanosPage } from './pages/Planos';
+import { ProdutosPage } from './pages/Produtos';
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -54,8 +60,31 @@ function App() {
                 path="/dashboard"
                 element={user ? <Dashboard /> : <Navigate to="/login" replace />}
               />
+              <Route
+                path="/agendamentos"
+                element={user ? <AgendamentosPage /> : <Navigate to="/login" replace />}
+              />
+              <Route
+                path="/clientes"
+                element={user ? <ClientesPage /> : <Navigate to="/login" replace />}
+              />
+              <Route
+                path="/historico-coloracao"
+                element={user ? <HistoricoColoracaoPage /> : <Navigate to="/login" replace />}
+              />
+              <Route
+                path="/perfis"
+                element={user ? <PerfisPage /> : <Navigate to="/login" replace />}
+              />
+              <Route
+                path="/planos"
+                element={user ? <PlanosPage /> : <Navigate to="/login" replace />}
+              />
+              <Route
+                path="/produtos"
+                element={user ? <ProdutosPage /> : <Navigate to="/login" replace />}
+              />
               <Route path="/" element={<Navigate to={user ? "/dashboard" : "/login"} replace />} />
-              {/* ... outras rotas protegidas */}
             </Routes>
           </main>
         </div>
