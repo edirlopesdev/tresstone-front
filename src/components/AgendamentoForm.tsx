@@ -10,25 +10,26 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Textarea } from "../components/ui/textarea"
 import { useToast } from "./ui/use-toast";
 import { supabase } from '../supabaseClient';
+import { Agendamento } from '../types/supabase-types';
 
 const agendamentoSchema = z.object({
   empresa_id: z.string().uuid(),
   usuario_id: z.string().uuid(),
   cliente_id: z.string().uuid(),
   data_agendamento: z.string().datetime(),
-  tipo_servico: z.string().optional(),
-  status: z.enum(["pendente", "confirmado", "cancelado"]).default("pendente"),
-  observacoes: z.string().optional(),
+  tipo_servico: z.string().nullable(),
+  status: z.enum(['pendente', 'confirmado', 'cancelado']).default('pendente'),
+  observacoes: z.string().nullable(),
 });
 
-type AgendamentoFormValues = z.infer<typeof agendamentoSchema>;
+type AgendamentoFormValues = Omit<Agendamento, 'id' | 'criado_em'>;
 
 export function AgendamentoForm() {
   const { toast } = useToast();
   const form = useForm<AgendamentoFormValues>({
     resolver: zodResolver(agendamentoSchema),
     defaultValues: {
-      status: "pendente",
+      status: 'pendente',
     },
   });
 
@@ -87,7 +88,7 @@ export function AgendamentoForm() {
             </div>
             <div>
               <Label htmlFor="status">Status</Label>
-              <Select onValueChange={(value: string) => form.setValue("status", value as AgendamentoFormValues["status"])}>
+              <Select onValueChange={(value: 'pendente' | 'confirmado' | 'cancelado') => form.setValue("status", value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o status" />
                 </SelectTrigger>
