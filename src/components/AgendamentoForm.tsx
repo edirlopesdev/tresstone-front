@@ -5,7 +5,7 @@ import * as z from "zod";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { Textarea } from "../components/ui/textarea"
 import { useToast } from "./ui/use-toast";
@@ -57,47 +57,49 @@ export function AgendamentoForm() {
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
+    <Card className="w-full">
       <CardHeader>
         <CardTitle>Novo Agendamento</CardTitle>
         <CardDescription>Crie um novo agendamento para um cliente.</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="empresa_id">Empresa</Label>
-            <Input id="empresa_id" {...form.register("empresa_id")} />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="empresa_id">Empresa</Label>
+              <Input id="empresa_id" {...form.register("empresa_id")} />
+            </div>
+            <div>
+              <Label htmlFor="usuario_id">Usuário</Label>
+              <Input id="usuario_id" {...form.register("usuario_id")} />
+            </div>
+            <div>
+              <Label htmlFor="cliente_id">Cliente</Label>
+              <Input id="cliente_id" {...form.register("cliente_id")} />
+            </div>
+            <div>
+              <Label htmlFor="data_agendamento">Data do Agendamento</Label>
+              <Input id="data_agendamento" type="datetime-local" {...form.register("data_agendamento")} />
+            </div>
+            <div>
+              <Label htmlFor="tipo_servico">Tipo de Serviço</Label>
+              <Input id="tipo_servico" {...form.register("tipo_servico")} />
+            </div>
+            <div>
+              <Label htmlFor="status">Status</Label>
+              <Select onValueChange={(value: string) => form.setValue("status", value as AgendamentoFormValues["status"])}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pendente">Pendente</SelectItem>
+                  <SelectItem value="confirmado">Confirmado</SelectItem>
+                  <SelectItem value="cancelado">Cancelado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="usuario_id">Usuário</Label>
-            <Input id="usuario_id" {...form.register("usuario_id")} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="cliente_id">Cliente</Label>
-            <Input id="cliente_id" {...form.register("cliente_id")} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="data_agendamento">Data do Agendamento</Label>
-            <Input id="data_agendamento" type="datetime-local" {...form.register("data_agendamento")} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="tipo_servico">Tipo de Serviço</Label>
-            <Input id="tipo_servico" {...form.register("tipo_servico")} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="status">Status</Label>
-            <Select onValueChange={(value: string) => form.setValue("status", value as AgendamentoFormValues["status"])}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione o status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="pendente">Pendente</SelectItem>
-                <SelectItem value="confirmado">Confirmado</SelectItem>
-                <SelectItem value="cancelado">Cancelado</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
+          <div>
             <Label htmlFor="observacoes">Observações</Label>
             <Textarea id="observacoes" {...form.register("observacoes")} />
           </div>
