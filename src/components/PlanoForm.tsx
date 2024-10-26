@@ -1,50 +1,91 @@
 import React from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
-import { Textarea } from "../components/ui/textarea"
 import { useToast } from "./ui/use-toast";
 import { supabase } from '../supabaseClient';
 import { Plano } from '../types/supabase-types';
+import { MultiSelect } from "./ui/multi-select";
+
+const recursosDisponiveis = [
+  { value: "agendamentos", label: "Agendamentos" },
+  { value: "clientes", label: "Gerenciamento de Clientes" },
+  { value: "historico_coloracao", label: "Histórico de Coloração" },
+  { value: "relatorios", label: "Relatórios" },
+  { value: "multiplas_unidades", label: "Suporte a Múltiplas Unidades" },
+];
 
 const planoSchema = z.object({
   nome: z.string().min(1, "O nome é obrigatório"),
   max_usuarios: z.number().int().positive("O número máximo de usuários deve ser positivo"),
-  recursos: z.string().transform((val) => JSON.parse(val)),
+  recursos: z.array(z.string()).min(1, "Selecione pelo menos um recurso"),
   preco: z.number().positive("O preço deve ser positivo"),
 });
 
-type PlanoFormValues = Omit<Plano, 'id' | 'criado_em'>;
+type PlanoFormValues = Omit<Plano, 'id' | 'criado_em'> & { recursos: string[] };
 
-export function PlanoForm() {
+interface PlanoFormProps {
+  planoParaEditar?: Plano;
+  onPlanoSalvo: () => void;
+}
+
+export function PlanoForm({ planoParaEditar, onPlanoSalvo }: PlanoFormProps) {
   const { toast } = useToast();
   const form = useForm<PlanoFormValues>({
     resolver: zodResolver(planoSchema),
+    defaultValues: planoParaEditar 
+      ? { ...planoParaEditar, recursos: Object.keys(planoParaEditar.recursos) }
+      : {
+          nome: "",
+          max_usuarios: 1,
+          recursos: [],
+          preco: 0,
+        },
   });
 
   const onSubmit = async (data: PlanoFormValues) => {
+    console.log("Dados do formulário:", data);
     try {
-      const { data: plano, error } = await supabase
-        .from('planos')
-        .insert(data)
-        .single();
+      const dataToSubmit = {
+        ...data,
+        recursos: data.recursos.reduce<Record<string, boolean>>((acc, val) => {
+          acc[val] = true;
+          return acc;
+        }, {}),
+      };
 
-      if (error) throw error;
+      let result;
+      if (planoParaEditar) {
+        result = await supabase
+          .from('planos')
+          .update(dataToSubmit)
+          .eq('id', planoParaEditar.id)
+          .single();
+      } else {
+        result = await supabase
+          .from('planos')
+          .insert(dataToSubmit)
+          .single();
+      }
+
+      if (result.error) throw result.error;
 
       toast({
-        title: "Plano criado",
-        description: "O plano foi criado com sucesso.",
+        title: planoParaEditar ? "Plano atualizado" : "Plano criado",
+        description: planoParaEditar ? "O plano foi atualizado com sucesso." : "O plano foi criado com sucesso.",
       });
 
       form.reset();
+      onPlanoSalvo();
     } catch (error) {
+      console.error('Erro ao salvar plano:', error);
       toast({
         title: "Erro",
-        description: "Ocorreu um erro ao criar o plano.",
+        description: `Ocorreu um erro ao ${planoParaEditar ? 'atualizar' : 'criar'} o plano: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
         variant: "destructive",
       });
     }
@@ -53,8 +94,8 @@ export function PlanoForm() {
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>Novo Plano</CardTitle>
-        <CardDescription>Crie um novo plano de assinatura.</CardDescription>
+        <CardTitle>{planoParaEditar ? 'Editar Plano' : 'Novo Plano'}</CardTitle>
+        <CardDescription>{planoParaEditar ? 'Edite os dados do plano.' : 'Crie um novo plano de assinatura.'}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -73,10 +114,20 @@ export function PlanoForm() {
             </div>
           </div>
           <div>
-            <Label htmlFor="recursos">Recursos (JSON)</Label>
-            <Textarea id="recursos" {...form.register("recursos")} />
+            <Label htmlFor="recursos">Recursos</Label>
+            <Controller
+              name="recursos"
+              control={form.control}
+              render={({ field }) => (
+                <MultiSelect
+                  options={recursosDisponiveis}
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              )}
+            />
           </div>
-          <Button type="submit" className="w-full">Criar Plano</Button>
+          <Button type="submit" className="w-full">{planoParaEditar ? 'Atualizar Plano' : 'Criar Plano'}</Button>
         </form>
       </CardContent>
     </Card>

@@ -6,13 +6,18 @@ import { Edit, Trash2 } from 'lucide-react';
 import { Button } from "./ui/button";
 import { Plano } from '../types/supabase-types';
 
-export function PlanoList() {
+interface PlanoListProps {
+  onEditPlano: (plano: Plano) => void;
+  triggerRefetch: boolean;
+}
+
+export function PlanoList({ onEditPlano, triggerRefetch }: PlanoListProps) {
   const [planos, setPlanos] = useState<Plano[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchPlanos();
-  }, []);
+  }, [triggerRefetch]);
 
   async function fetchPlanos() {
     try {
@@ -29,10 +34,6 @@ export function PlanoList() {
       setLoading(false);
     }
   }
-
-  const handleEdit = (id: string) => {
-    console.log('Editar plano', id);
-  };
 
   const handleDelete = (id: string) => {
     console.log('Excluir plano', id);
@@ -70,7 +71,7 @@ export function PlanoList() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleEdit(plano.id)}
+                          onClick={() => onEditPlano(plano)}
                         >
                           <Edit size={16} />
                         </Button>
