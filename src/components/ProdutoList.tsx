@@ -4,43 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import { Edit, Trash2 } from 'lucide-react';
 import { Button } from "./ui/button";
-
-interface Produto {
-  id: string;
-  nome: string;
-  descricao: string;
-  preco: number;
-  quantidade_estoque: number;
-  categoria: string;
-}
-
-// JSON de produtos de exemplo
-const produtosExemplo: Produto[] = [
-  {
-    id: '1',
-    nome: 'Shampoo Hidratante',
-    descricao: 'Shampoo para cabelos secos',
-    preco: 29.99,
-    quantidade_estoque: 50,
-    categoria: 'Cuidados com o Cabelo'
-  },
-  {
-    id: '2',
-    nome: 'Condicionador Reparador',
-    descricao: 'Condicionador para cabelos danificados',
-    preco: 34.99,
-    quantidade_estoque: 40,
-    categoria: 'Cuidados com o Cabelo'
-  },
-  {
-    id: '3',
-    nome: 'Máscara Capilar',
-    descricao: 'Máscara de tratamento intensivo',
-    preco: 45.99,
-    quantidade_estoque: 30,
-    categoria: 'Tratamentos'
-  },
-];
+import { Produto } from '../types/supabase-types';
 
 export function ProdutoList() {
   const [produtos, setProdutos] = useState<Produto[]>([]);
@@ -53,9 +17,12 @@ export function ProdutoList() {
   async function fetchProdutos() {
     try {
       setLoading(true);
-      // Simula uma chamada à API
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setProdutos(produtosExemplo);
+      const { data, error } = await supabase
+        .from('produtos')
+        .select('*');
+
+      if (error) throw error;
+      setProdutos(data || []);
     } catch (error) {
       console.error('Erro ao buscar produtos:', error);
     } finally {
@@ -85,9 +52,9 @@ export function ProdutoList() {
               <TableHeader>
                 <TableRow className="bg-gray-50">
                   <TableHead className="font-semibold">Nome</TableHead>
-                  <TableHead className="font-semibold">Preço</TableHead>
-                  <TableHead className="font-semibold">Estoque</TableHead>
-                  <TableHead className="font-semibold">Categoria</TableHead>
+                  <TableHead className="font-semibold">Marca</TableHead>
+                  <TableHead className="font-semibold">Tipo</TableHead>
+                  <TableHead className="font-semibold">Código da Cor</TableHead>
                   <TableHead className="font-semibold text-right pr-9">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -95,9 +62,9 @@ export function ProdutoList() {
                 {produtos.map((produto) => (
                   <TableRow key={produto.id} className="hover:bg-gray-50">
                     <TableCell className="font-medium">{produto.nome}</TableCell>
-                    <TableCell>R$ {produto.preco.toFixed(2)}</TableCell>
-                    <TableCell>{produto.quantidade_estoque}</TableCell>
-                    <TableCell>{produto.categoria}</TableCell>
+                    <TableCell>{produto.marca}</TableCell>
+                    <TableCell>{produto.tipo}</TableCell>
+                    <TableCell>{produto.codigo_cor || '-'}</TableCell>
                     <TableCell className="text-right pr-2">
                       <div className="flex justify-end space-x-1">
                         <Button

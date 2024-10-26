@@ -48,4 +48,14 @@ export interface Plano {
   criado_em: string | null; // timestamp with time zone
 }
 
+export interface Produto {
+  id: string; // UUID
+  empresa_id: string; // UUID
+  nome: string;
+  marca: string;
+  tipo: string;
+  codigo_cor: string | null;
+  criado_em: string | null; // timestamp with time zone
+}
+
 // Adicione outras interfaces para as demais tabelas do seu banco de dados
