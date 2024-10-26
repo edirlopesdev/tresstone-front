@@ -49,28 +49,30 @@ export function ClienteForm() {
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
+    <Card className="w-full">
       <CardHeader>
         <CardTitle>Novo Cliente</CardTitle>
         <CardDescription>Cadastre um novo cliente.</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="empresa_id">Empresa</Label>
-            <Input id="empresa_id" {...form.register("empresa_id")} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="nome">Nome</Label>
-            <Input id="nome" {...form.register("nome")} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="tipo_cabelo">Tipo de Cabelo</Label>
-            <Input id="tipo_cabelo" {...form.register("tipo_cabelo")} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="condicao_cabelo">Condição do Cabelo</Label>
-            <Input id="condicao_cabelo" {...form.register("condicao_cabelo")} />
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <Label htmlFor="empresa_id">Empresa</Label>
+              <Input id="empresa_id" {...form.register("empresa_id")} />
+            </div>
+            <div>
+              <Label htmlFor="nome">Nome</Label>
+              <Input id="nome" {...form.register("nome")} />
+            </div>
+            <div>
+              <Label htmlFor="tipo_cabelo">Tipo de Cabelo</Label>
+              <Input id="tipo_cabelo" {...form.register("tipo_cabelo")} />
+            </div>
+            <div>
+              <Label htmlFor="condicao_cabelo">Condição do Cabelo</Label>
+              <Input id="condicao_cabelo" {...form.register("condicao_cabelo")} />
+            </div>
           </div>
           <Button type="submit" className="w-full">Cadastrar Cliente</Button>
         </form>
