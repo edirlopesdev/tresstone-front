@@ -5,14 +5,21 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { Edit, Trash2 } from 'lucide-react';
 import { Button } from "./ui/button";
 import { Perfil } from '../types/supabase-types';
+import { useToast } from "./ui/use-toast";
 
-export function PerfilList() {
+interface PerfilListProps {
+  onEditPerfil: (perfil: Perfil) => void;
+  triggerRefetch: boolean;
+}
+
+export function PerfilList({ onEditPerfil, triggerRefetch }: PerfilListProps) {
   const [perfis, setPerfis] = useState<Perfil[]>([]);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchPerfis();
-  }, []);
+  }, [triggerRefetch]);
 
   async function fetchPerfis() {
     try {
@@ -25,17 +32,39 @@ export function PerfilList() {
       setPerfis(data || []);
     } catch (error) {
       console.error('Erro ao buscar perfis:', error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao buscar os perfis.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   }
 
-  const handleEdit = (id: string) => {
-    console.log('Editar perfil', id);
-  };
+  const handleDelete = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('perfis')
+        .delete()
+        .eq('id', id);
 
-  const handleDelete = (id: string) => {
-    console.log('Excluir perfil', id);
+      if (error) throw error;
+
+      toast({
+        title: "Perfil excluído",
+        description: "O perfil foi excluído com sucesso.",
+      });
+
+      fetchPerfis();
+    } catch (error) {
+      console.error('Erro ao excluir perfil:', error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao excluir o perfil.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -68,7 +97,7 @@ export function PerfilList() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleEdit(perfil.id)}
+                          onClick={() => onEditPerfil(perfil)}
                         >
                           <Edit size={16} />
                         </Button>

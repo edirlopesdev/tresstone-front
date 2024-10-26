@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -19,31 +19,71 @@ const perfilSchema = z.object({
 
 type PerfilFormValues = Omit<Perfil, 'criado_em'>;
 
-export function PerfilForm() {
+interface PerfilFormProps {
+  perfilParaEditar?: Perfil;
+  onPerfilSalvo: () => void;
+}
+
+export function PerfilForm({ perfilParaEditar, onPerfilSalvo }: PerfilFormProps) {
   const { toast } = useToast();
   const form = useForm<PerfilFormValues>({
     resolver: zodResolver(perfilSchema),
+    defaultValues: {
+      id: "",
+      empresa_id: "",
+      nome: "",
+      cargo: "",
+    },
   });
+
+  useEffect(() => {
+    if (perfilParaEditar) {
+      form.reset({
+        id: perfilParaEditar.id,
+        empresa_id: perfilParaEditar.empresa_id,
+        nome: perfilParaEditar.nome,
+        cargo: perfilParaEditar.cargo,
+      });
+    } else {
+      form.reset({
+        id: "",
+        empresa_id: "",
+        nome: "",
+        cargo: "",
+      });
+    }
+  }, [perfilParaEditar, form]);
 
   const onSubmit = async (data: PerfilFormValues) => {
     try {
-      const { data: perfil, error } = await supabase
-        .from('perfis')
-        .insert(data)
-        .single();
+      let result;
+      if (perfilParaEditar) {
+        result = await supabase
+          .from('perfis')
+          .update(data)
+          .eq('id', perfilParaEditar.id)
+          .single();
+      } else {
+        result = await supabase
+          .from('perfis')
+          .insert(data)
+          .single();
+      }
 
-      if (error) throw error;
+      if (result.error) throw result.error;
 
       toast({
-        title: "Perfil criado",
-        description: "O perfil foi criado com sucesso.",
+        title: perfilParaEditar ? "Perfil atualizado" : "Perfil criado",
+        description: perfilParaEditar ? "O perfil foi atualizado com sucesso." : "O perfil foi criado com sucesso.",
       });
 
       form.reset();
+      onPerfilSalvo();
     } catch (error) {
+      console.error('Erro ao salvar perfil:', error);
       toast({
         title: "Erro",
-        description: "Ocorreu um erro ao criar o perfil.",
+        description: `Ocorreu um erro ao ${perfilParaEditar ? 'atualizar' : 'criar'} o perfil: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
         variant: "destructive",
       });
     }
@@ -52,8 +92,8 @@ export function PerfilForm() {
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>Novo Perfil</CardTitle>
-        <CardDescription>Crie um novo perfil de usuário.</CardDescription>
+        <CardTitle>{perfilParaEditar ? 'Editar Perfil' : 'Novo Perfil'}</CardTitle>
+        <CardDescription>{perfilParaEditar ? 'Edite os dados do perfil.' : 'Crie um novo perfil de usuário.'}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -61,21 +101,33 @@ export function PerfilForm() {
             <div>
               <Label htmlFor="id">ID do Usuário</Label>
               <Input id="id" {...form.register("id")} />
+              {form.formState.errors.id && (
+                <p className="text-red-500">{form.formState.errors.id.message}</p>
+              )}
             </div>
             <div>
               <Label htmlFor="empresa_id">Empresa</Label>
               <Input id="empresa_id" {...form.register("empresa_id")} />
+              {form.formState.errors.empresa_id && (
+                <p className="text-red-500">{form.formState.errors.empresa_id.message}</p>
+              )}
             </div>
             <div>
               <Label htmlFor="nome">Nome</Label>
               <Input id="nome" {...form.register("nome")} />
+              {form.formState.errors.nome && (
+                <p className="text-red-500">{form.formState.errors.nome.message}</p>
+              )}
             </div>
             <div>
               <Label htmlFor="cargo">Cargo</Label>
               <Input id="cargo" {...form.register("cargo")} />
+              {form.formState.errors.cargo && (
+                <p className="text-red-500">{form.formState.errors.cargo.message}</p>
+              )}
             </div>
           </div>
-          <Button type="submit" className="w-full">Criar Perfil</Button>
+          <Button type="submit" className="w-full">{perfilParaEditar ? 'Atualizar Perfil' : 'Criar Perfil'}</Button>
         </form>
       </CardContent>
     </Card>
