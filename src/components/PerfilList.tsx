@@ -2,12 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
+import { Edit, Trash2 } from 'lucide-react';
+import { Button } from "./ui/button";
 
 interface Perfil {
   id: string;
-  empresa_id: string;
   nome: string;
-  cargo: string;
+  descricao: string;
+  permissoes?: string[]; // Tornando permissoes opcional
 }
 
 export function PerfilList() {
@@ -34,6 +36,14 @@ export function PerfilList() {
     }
   }
 
+  const handleEdit = (id: string) => {
+    console.log('Editar perfil', id);
+  };
+
+  const handleDelete = (id: string) => {
+    console.log('Excluir perfil', id);
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -43,22 +53,52 @@ export function PerfilList() {
         {loading ? (
           <p>Carregando perfis...</p>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Cargo</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {perfis.map((perfil) => (
-                <TableRow key={perfil.id}>
-                  <TableCell>{perfil.nome}</TableCell>
-                  <TableCell>{perfil.cargo}</TableCell>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-gray-50">
+                  <TableHead className="font-semibold">Nome</TableHead>
+                  <TableHead className="font-semibold">Descrição</TableHead>
+                  <TableHead className="font-semibold">Permissões</TableHead>
+                  <TableHead className="font-semibold text-right pr-9">Ações</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {perfis.map((perfil) => (
+                  <TableRow key={perfil.id} className="hover:bg-gray-50">
+                    <TableCell className="font-medium">{perfil.nome}</TableCell>
+                    <TableCell>{perfil.descricao}</TableCell>
+                    <TableCell>{perfil.permissoes ? perfil.permissoes.join(', ') : '-'}</TableCell>
+                    <TableCell className="text-right pr-2">
+                      <div className="flex justify-end space-x-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEdit(perfil.id)}
+                        >
+                          <Edit size={16} />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDelete(perfil.id)}
+                        >
+                          <Trash2 size={16} />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {perfis.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center text-gray-500 py-8">
+                      Nenhum perfil cadastrado
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         )}
       </CardContent>
     </Card>
