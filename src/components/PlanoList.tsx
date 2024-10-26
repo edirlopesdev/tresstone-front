@@ -4,43 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import { Edit, Trash2 } from 'lucide-react';
 import { Button } from "./ui/button";
-
-interface Plano {
-  id: string;
-  nome: string;
-  descricao: string;
-  preco: number;
-  duracao: number;
-  recursos: string;
-}
-
-// JSON de planos de exemplo
-const planosExemplo: Plano[] = [
-  {
-    id: '1',
-    nome: 'Básico',
-    descricao: 'Plano básico para pequenos salões',
-    preco: 49.99,
-    duracao: 1,
-    recursos: 'Agendamentos, Clientes, Histórico de Coloração'
-  },
-  {
-    id: '2',
-    nome: 'Profissional',
-    descricao: 'Plano ideal para salões de médio porte',
-    preco: 99.99,
-    duracao: 1,
-    recursos: 'Agendamentos, Clientes, Histórico de Coloração, Relatórios'
-  },
-  {
-    id: '3',
-    nome: 'Enterprise',
-    descricao: 'Plano completo para grandes redes de salões',
-    preco: 199.99,
-    duracao: 1,
-    recursos: 'Agendamentos, Clientes, Histórico de Coloração, Relatórios, Múltiplas Unidades'
-  },
-];
+import { Plano } from '../types/supabase-types';
 
 export function PlanoList() {
   const [planos, setPlanos] = useState<Plano[]>([]);
@@ -53,9 +17,12 @@ export function PlanoList() {
   async function fetchPlanos() {
     try {
       setLoading(true);
-      // Simula uma chamada à API
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setPlanos(planosExemplo);
+      const { data, error } = await supabase
+        .from('planos')
+        .select('*');
+
+      if (error) throw error;
+      setPlanos(data || []);
     } catch (error) {
       console.error('Erro ao buscar planos:', error);
     } finally {
@@ -85,8 +52,8 @@ export function PlanoList() {
               <TableHeader>
                 <TableRow className="bg-gray-50">
                   <TableHead className="font-semibold">Nome</TableHead>
+                  <TableHead className="font-semibold">Máx. Usuários</TableHead>
                   <TableHead className="font-semibold">Preço</TableHead>
-                  <TableHead className="font-semibold">Duração</TableHead>
                   <TableHead className="font-semibold">Recursos</TableHead>
                   <TableHead className="font-semibold text-right pr-9">Ações</TableHead>
                 </TableRow>
@@ -95,9 +62,9 @@ export function PlanoList() {
                 {planos.map((plano) => (
                   <TableRow key={plano.id} className="hover:bg-gray-50">
                     <TableCell className="font-medium">{plano.nome}</TableCell>
+                    <TableCell>{plano.max_usuarios}</TableCell>
                     <TableCell>R$ {plano.preco.toFixed(2)}</TableCell>
-                    <TableCell>{plano.duracao} {plano.duracao === 1 ? 'mês' : 'meses'}</TableCell>
-                    <TableCell>{plano.recursos}</TableCell>
+                    <TableCell>{JSON.stringify(plano.recursos)}</TableCell>
                     <TableCell className="text-right pr-2">
                       <div className="flex justify-end space-x-1">
                         <Button

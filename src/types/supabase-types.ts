@@ -39,4 +39,13 @@ export interface HistoricoColoracao {
   data: string; // timestamp with time zone
 }
 
+export interface Plano {
+  id: string; // UUID
+  nome: string;
+  max_usuarios: number;
+  recursos: Record<string, any>; // jsonb
+  preco: number;
+  criado_em: string | null; // timestamp with time zone
+}
+
 // Adicione outras interfaces para as demais tabelas do seu banco de dados
