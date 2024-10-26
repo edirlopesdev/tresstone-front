@@ -36,7 +36,6 @@ export function ClienteForm({ clienteParaEditar, onClienteSalvo }: ClienteFormPr
     },
   });
 
-  // Efeito para atualizar o formulário quando clienteParaEditar mudar
   useEffect(() => {
     if (clienteParaEditar) {
       form.reset({
