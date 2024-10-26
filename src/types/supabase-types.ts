@@ -33,8 +33,8 @@ export interface HistoricoColoracao {
   usuario_id: string; // UUID
   cor_base: string;
   cor_alvo: string;
-  produtos_usados: Record<string, any> | null; // jsonb
-  tecnicas_usadas: string[] | null;
+  produtos_usados: string | null; // jsonb
+  tecnicas_usadas: string | null;
   observacoes: string | null;
   data: string; // timestamp with time zone
 }

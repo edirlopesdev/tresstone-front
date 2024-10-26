@@ -5,14 +5,21 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { Edit, Trash2 } from 'lucide-react';
 import { Button } from "./ui/button";
 import { HistoricoColoracao } from '../types/supabase-types';
+import { useToast } from "./ui/use-toast";
 
-export function HistoricoColoracaoList() {
+interface HistoricoColoracaoListProps {
+  onEditHistorico: (historico: HistoricoColoracao) => void;
+  triggerRefetch: boolean;
+}
+
+export function HistoricoColoracaoList({ onEditHistorico, triggerRefetch }: HistoricoColoracaoListProps) {
   const [historicoColoracao, setHistoricoColoracao] = useState<HistoricoColoracao[]>([]);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchHistoricoColoracao();
-  }, []);
+  }, [triggerRefetch]);
 
   async function fetchHistoricoColoracao() {
     try {
@@ -25,17 +32,39 @@ export function HistoricoColoracaoList() {
       setHistoricoColoracao(data || []);
     } catch (error) {
       console.error('Erro ao buscar histórico de coloração:', error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao buscar o histórico de coloração.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   }
 
-  const handleEdit = (id: string) => {
-    console.log('Editar histórico de coloração', id);
-  };
+  const handleDelete = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('historico_coloracao')
+        .delete()
+        .eq('id', id);
 
-  const handleDelete = (id: string) => {
-    console.log('Excluir histórico de coloração', id);
+      if (error) throw error;
+
+      toast({
+        title: "Histórico excluído",
+        description: "O histórico de coloração foi excluído com sucesso.",
+      });
+
+      fetchHistoricoColoracao();
+    } catch (error) {
+      console.error('Erro ao excluir histórico de coloração:', error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao excluir o histórico de coloração.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -64,13 +93,14 @@ export function HistoricoColoracaoList() {
                     <TableCell className="font-medium">{new Date(historico.data).toLocaleString()}</TableCell>
                     <TableCell>{historico.cor_base}</TableCell>
                     <TableCell>{historico.cor_alvo}</TableCell>
-                    <TableCell>{historico.tecnicas_usadas?.join(', ') || '-'}</TableCell>
+                    <TableCell>{typeof historico.produtos_usados === 'object' ? JSON.stringify(historico.produtos_usados) : (historico.produtos_usados || '-')}</TableCell>
+                    <TableCell>{Array.isArray(historico.tecnicas_usadas) ? historico.tecnicas_usadas.join(', ') : (historico.tecnicas_usadas || '-')}</TableCell>
                     <TableCell className="text-right pr-2">
                       <div className="flex justify-end space-x-1">
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleEdit(historico.id)}
+                          onClick={() => onEditHistorico(historico)}
                         >
                           <Edit size={16} />
                         </Button>

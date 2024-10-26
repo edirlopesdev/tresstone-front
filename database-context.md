@@ -34,8 +34,8 @@ O projeto utiliza Supabase com as seguintes tabelas principais:
    - usuario_id: UUID (FK para auth.users)
    - cor_base: text
    - cor_alvo: text
-   - produtos_usados: jsonb (nullable)
-   - tecnicas_usadas: text[] (nullable)
+   - produtos_usados: text (nullable)
+   - tecnicas_usadas: text (nullable)
    - observacoes: text (nullable)
    - data: timestamp with time zone
 
