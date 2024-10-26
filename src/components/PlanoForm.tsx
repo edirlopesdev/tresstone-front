@@ -12,9 +12,10 @@ import { supabase } from '../supabaseClient';
 
 const planoSchema = z.object({
   nome: z.string().min(1, "O nome é obrigatório"),
-  max_usuarios: z.number().int().positive(),
-  recursos: z.string().min(1, "Os recursos são obrigatórios"),
-  preco: z.number().positive(),
+  descricao: z.string().optional(),
+  preco: z.number().min(0, "O preço deve ser maior ou igual a zero"),
+  duracao: z.number().int().min(1, "A duração deve ser de pelo menos 1 mês"),
+  recursos: z.string().optional(),
 });
 
 type PlanoFormValues = z.infer<typeof planoSchema>;
@@ -27,14 +28,9 @@ export function PlanoForm() {
 
   const onSubmit = async (data: PlanoFormValues) => {
     try {
-      const formattedData = {
-        ...data,
-        recursos: JSON.parse(data.recursos),
-      };
-
       const { data: plano, error } = await supabase
         .from('planos')
-        .insert(formattedData)
+        .insert(data)
         .single();
 
       if (error) throw error;
@@ -55,28 +51,34 @@ export function PlanoForm() {
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
+    <Card className="w-full">
       <CardHeader>
         <CardTitle>Novo Plano</CardTitle>
         <CardDescription>Crie um novo plano de assinatura.</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="nome">Nome do Plano</Label>
-            <Input id="nome" {...form.register("nome")} />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="nome">Nome do Plano</Label>
+              <Input id="nome" {...form.register("nome")} />
+            </div>
+            <div>
+              <Label htmlFor="preco">Preço</Label>
+              <Input id="preco" type="number" step="0.01" {...form.register("preco", { valueAsNumber: true })} />
+            </div>
+            <div>
+              <Label htmlFor="duracao">Duração (meses)</Label>
+              <Input id="duracao" type="number" {...form.register("duracao", { valueAsNumber: true })} />
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="max_usuarios">Máximo de Usuários</Label>
-            <Input id="max_usuarios" type="number" {...form.register("max_usuarios", { valueAsNumber: true })} />
+          <div>
+            <Label htmlFor="descricao">Descrição</Label>
+            <Textarea id="descricao" {...form.register("descricao")} />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="recursos">Recursos (JSON)</Label>
+          <div>
+            <Label htmlFor="recursos">Recursos (separados por vírgula)</Label>
             <Textarea id="recursos" {...form.register("recursos")} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="preco">Preço</Label>
-            <Input id="preco" type="number" step="0.01" {...form.register("preco", { valueAsNumber: true })} />
           </div>
           <Button type="submit" className="w-full">Criar Plano</Button>
         </form>
