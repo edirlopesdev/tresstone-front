@@ -5,21 +5,23 @@ import * as z from "zod";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Textarea } from "../components/ui/textarea"
 import { useToast } from "./ui/use-toast";
 import { supabase } from '../supabaseClient';
+import { HistoricoColoracao } from '../types/supabase-types';
 
 const historicoColoracaoSchema = z.object({
   cliente_id: z.string().uuid(),
-  data_coloracao: z.string().datetime(),
-  cor_aplicada: z.string().min(1, "A cor aplicada é obrigatória"),
-  tecnica_usada: z.string().optional(),
-  produtos_usados: z.string().optional(),
+  usuario_id: z.string().uuid(),
+  cor_base: z.string().min(1, "A cor base é obrigatória"),
+  cor_alvo: z.string().min(1, "A cor alvo é obrigatória"),
+  produtos_usados: z.string().optional().transform(val => val ? JSON.parse(val) : null),
+  tecnicas_usadas: z.string().optional().transform(val => val ? val.split(',').map(item => item.trim()) : null),
   observacoes: z.string().optional(),
 });
 
-type HistoricoColoracaoFormValues = z.infer<typeof historicoColoracaoSchema>;
+type HistoricoColoracaoFormValues = Omit<HistoricoColoracao, 'id' | 'data'>;
 
 export function HistoricoColoracaoForm() {
   const { toast } = useToast();
@@ -59,26 +61,30 @@ export function HistoricoColoracaoForm() {
       </CardHeader>
       <CardContent>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="cliente_id">Cliente</Label>
               <Input id="cliente_id" {...form.register("cliente_id")} />
             </div>
             <div>
-              <Label htmlFor="data_coloracao">Data da Coloração</Label>
-              <Input id="data_coloracao" type="datetime-local" {...form.register("data_coloracao")} />
+              <Label htmlFor="usuario_id">Usuário</Label>
+              <Input id="usuario_id" {...form.register("usuario_id")} />
             </div>
             <div>
-              <Label htmlFor="cor_aplicada">Cor Aplicada</Label>
-              <Input id="cor_aplicada" {...form.register("cor_aplicada")} />
+              <Label htmlFor="cor_base">Cor Base</Label>
+              <Input id="cor_base" {...form.register("cor_base")} />
             </div>
             <div>
-              <Label htmlFor="tecnica_usada">Técnica Usada</Label>
-              <Input id="tecnica_usada" {...form.register("tecnica_usada")} />
+              <Label htmlFor="cor_alvo">Cor Alvo</Label>
+              <Input id="cor_alvo" {...form.register("cor_alvo")} />
             </div>
             <div>
-              <Label htmlFor="produtos_usados">Produtos Usados</Label>
-              <Input id="produtos_usados" {...form.register("produtos_usados")} />
+              <Label htmlFor="produtos_usados">Produtos Usados (JSON)</Label>
+              <Textarea id="produtos_usados" {...form.register("produtos_usados")} />
+            </div>
+            <div>
+              <Label htmlFor="tecnicas_usadas">Técnicas Usadas (separadas por vírgula)</Label>
+              <Input id="tecnicas_usadas" {...form.register("tecnicas_usadas")} />
             </div>
           </div>
           <div>

@@ -27,4 +27,16 @@ export interface Perfil {
   created_at: string;
 }
 
+export interface HistoricoColoracao {
+  id: string; // UUID
+  cliente_id: string; // UUID
+  usuario_id: string; // UUID
+  cor_base: string;
+  cor_alvo: string;
+  produtos_usados: Record<string, any> | null; // jsonb
+  tecnicas_usadas: string[] | null;
+  observacoes: string | null;
+  data: string; // timestamp with time zone
+}
+
 // Adicione outras interfaces para as demais tabelas do seu banco de dados

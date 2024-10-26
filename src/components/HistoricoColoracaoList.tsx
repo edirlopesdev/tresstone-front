@@ -4,47 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import { Edit, Trash2 } from 'lucide-react';
 import { Button } from "./ui/button";
-
-interface HistoricoColoracao {
-  id: string;
-  cliente_id: string;
-  data_coloracao: string;
-  cor_aplicada: string;
-  tecnica_usada: string;
-  produtos_usados: string;
-  observacoes: string;
-}
-
-// JSON de histórico de coloração de exemplo
-const historicoColoracaoExemplo: HistoricoColoracao[] = [
-  {
-    id: '1',
-    cliente_id: 'cliente1',
-    data_coloracao: '2023-06-01T10:00:00',
-    cor_aplicada: 'Loiro Platinado',
-    tecnica_usada: 'Mechas',
-    produtos_usados: 'Descolorante, Tonalizante',
-    observacoes: 'Cliente satisfeita com o resultado'
-  },
-  {
-    id: '2',
-    cliente_id: 'cliente2',
-    data_coloracao: '2023-06-02T14:00:00',
-    cor_aplicada: 'Ruivo Intenso',
-    tecnica_usada: 'Coloração Global',
-    produtos_usados: 'Coloração permanente',
-    observacoes: 'Retocar a cada 4 semanas'
-  },
-  {
-    id: '3',
-    cliente_id: 'cliente3',
-    data_coloracao: '2023-06-03T11:00:00',
-    cor_aplicada: 'Castanho Chocolate',
-    tecnica_usada: 'Balayage',
-    produtos_usados: 'Coloração semi-permanente',
-    observacoes: 'Manutenção com shampoo especial'
-  },
-];
+import { HistoricoColoracao } from '../types/supabase-types';
 
 export function HistoricoColoracaoList() {
   const [historicoColoracao, setHistoricoColoracao] = useState<HistoricoColoracao[]>([]);
@@ -57,9 +17,12 @@ export function HistoricoColoracaoList() {
   async function fetchHistoricoColoracao() {
     try {
       setLoading(true);
-      // Simula uma chamada à API
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setHistoricoColoracao(historicoColoracaoExemplo);
+      const { data, error } = await supabase
+        .from('historico_coloracao')
+        .select('*');
+
+      if (error) throw error;
+      setHistoricoColoracao(data || []);
     } catch (error) {
       console.error('Erro ao buscar histórico de coloração:', error);
     } finally {
@@ -89,19 +52,19 @@ export function HistoricoColoracaoList() {
               <TableHeader>
                 <TableRow className="bg-gray-50">
                   <TableHead className="font-semibold">Data</TableHead>
-                  <TableHead className="font-semibold">Cor Aplicada</TableHead>
-                  <TableHead className="font-semibold">Técnica Usada</TableHead>
-                  <TableHead className="font-semibold">Produtos Usados</TableHead>
+                  <TableHead className="font-semibold">Cor Base</TableHead>
+                  <TableHead className="font-semibold">Cor Alvo</TableHead>
+                  <TableHead className="font-semibold">Técnicas Usadas</TableHead>
                   <TableHead className="font-semibold text-right pr-9">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {historicoColoracao.map((historico) => (
                   <TableRow key={historico.id} className="hover:bg-gray-50">
-                    <TableCell className="font-medium">{new Date(historico.data_coloracao).toLocaleString()}</TableCell>
-                    <TableCell>{historico.cor_aplicada}</TableCell>
-                    <TableCell>{historico.tecnica_usada}</TableCell>
-                    <TableCell>{historico.produtos_usados}</TableCell>
+                    <TableCell className="font-medium">{new Date(historico.data).toLocaleString()}</TableCell>
+                    <TableCell>{historico.cor_base}</TableCell>
+                    <TableCell>{historico.cor_alvo}</TableCell>
+                    <TableCell>{historico.tecnicas_usadas?.join(', ') || '-'}</TableCell>
                     <TableCell className="text-right pr-2">
                       <div className="flex justify-end space-x-1">
                         <Button
