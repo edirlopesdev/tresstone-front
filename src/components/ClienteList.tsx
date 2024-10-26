@@ -4,53 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import { Edit, Trash2 } from 'lucide-react';
 import { Button } from "./ui/button";
-
-interface Cliente {
-  id: string;
-  empresa_id: string;
-  nome: string;
-  tipo_cabelo: string;
-  condicao_cabelo: string;
-}
-
-// JSON de clientes de exemplo
-const clientesExemplo: Cliente[] = [
-  {
-    id: '1',
-    empresa_id: 'empresa1',
-    nome: 'Maria Silva',
-    tipo_cabelo: 'Cacheado',
-    condicao_cabelo: 'Seco'
-  },
-  {
-    id: '2',
-    empresa_id: 'empresa1',
-    nome: 'João Santos',
-    tipo_cabelo: 'Liso',
-    condicao_cabelo: 'Normal'
-  },
-  {
-    id: '3',
-    empresa_id: 'empresa1',
-    nome: 'Ana Oliveira',
-    tipo_cabelo: 'Ondulado',
-    condicao_cabelo: 'Oleoso'
-  },
-  {
-    id: '4',
-    empresa_id: 'empresa1',
-    nome: 'Carlos Ferreira',
-    tipo_cabelo: 'Crespo',
-    condicao_cabelo: 'Misto'
-  },
-  {
-    id: '5',
-    empresa_id: 'empresa1',
-    nome: 'Beatriz Costa',
-    tipo_cabelo: 'Liso',
-    condicao_cabelo: 'Danificado'
-  }
-];
+import { Cliente } from '../types/supabase-types';
 
 export function ClienteList() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
@@ -63,9 +17,12 @@ export function ClienteList() {
   async function fetchClientes() {
     try {
       setLoading(true);
-      // Simula uma chamada à API
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setClientes(clientesExemplo);
+      const { data, error } = await supabase
+        .from('clientes')
+        .select('*');
+
+      if (error) throw error;
+      setClientes(data || []);
     } catch (error) {
       console.error('Erro ao buscar clientes:', error);
     } finally {
@@ -104,8 +61,8 @@ export function ClienteList() {
                 {clientes.map((cliente) => (
                   <TableRow key={cliente.id} className="hover:bg-gray-50">
                     <TableCell className="font-medium">{cliente.nome}</TableCell>
-                    <TableCell>{cliente.tipo_cabelo}</TableCell>
-                    <TableCell>{cliente.condicao_cabelo}</TableCell>
+                    <TableCell>{cliente.tipo_cabelo || '-'}</TableCell>
+                    <TableCell>{cliente.condicao_cabelo || '-'}</TableCell>
                     <TableCell className="text-right pr-2">
                       <div className="flex justify-end space-x-1">
                         <Button

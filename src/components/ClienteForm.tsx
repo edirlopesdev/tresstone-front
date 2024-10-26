@@ -8,15 +8,16 @@ import { Label } from "./ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./ui/card";
 import { useToast } from "./ui/use-toast";
 import { supabase } from '../supabaseClient';
+import { Cliente } from '../types/supabase-types';
 
 const clienteSchema = z.object({
   empresa_id: z.string().uuid(),
   nome: z.string().min(1, "O nome é obrigatório"),
-  tipo_cabelo: z.string().optional(),
-  condicao_cabelo: z.string().optional(),
+  tipo_cabelo: z.string().nullable(),
+  condicao_cabelo: z.string().nullable(),
 });
 
-type ClienteFormValues = z.infer<typeof clienteSchema>;
+type ClienteFormValues = Omit<Cliente, 'id' | 'criado_em'>;
 
 export function ClienteForm() {
   const { toast } = useToast();
