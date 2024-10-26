@@ -5,14 +5,21 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { Edit, Trash2 } from 'lucide-react';
 import { Button } from "./ui/button";
 import { Cliente } from '../types/supabase-types';
+import { useToast } from "./ui/use-toast";
 
-export function ClienteList() {
+interface ClienteListProps {
+  onEditCliente: (cliente: Cliente) => void;
+  triggerRefetch: boolean;
+}
+
+export function ClienteList({ onEditCliente, triggerRefetch }: ClienteListProps) {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchClientes();
-  }, []);
+  }, [triggerRefetch]);
 
   async function fetchClientes() {
     try {
@@ -25,17 +32,39 @@ export function ClienteList() {
       setClientes(data || []);
     } catch (error) {
       console.error('Erro ao buscar clientes:', error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao buscar os clientes.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   }
 
-  const handleEdit = (id: string) => {
-    console.log('Editar cliente', id);
-  };
+  const handleDelete = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('clientes')
+        .delete()
+        .eq('id', id);
 
-  const handleDelete = (id: string) => {
-    console.log('Excluir cliente', id);
+      if (error) throw error;
+
+      toast({
+        title: "Cliente excluído",
+        description: "O cliente foi excluído com sucesso.",
+      });
+
+      fetchClientes();
+    } catch (error) {
+      console.error('Erro ao excluir cliente:', error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao excluir o cliente.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -68,7 +97,7 @@ export function ClienteList() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleEdit(cliente.id)}
+                          onClick={() => onEditCliente(cliente)}
                         >
                           <Edit size={16} />
                         </Button>

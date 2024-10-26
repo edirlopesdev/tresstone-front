@@ -12,6 +12,7 @@ import { HistoricoColoracaoPage } from './pages/HistoricoColoracao';
 import { PerfisPage } from './pages/Perfis';
 import { PlanosPage } from './pages/Planos';
 import { ProdutosPage } from './pages/Produtos';
+import { Toaster } from "./components/ui/toaster"
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -87,6 +88,7 @@ function App() {
               <Route path="/" element={<Navigate to={user ? "/dashboard" : "/login"} replace />} />
             </Routes>
           </main>
+          <Toaster />
         </div>
       </Router>
     </ToastProvider>

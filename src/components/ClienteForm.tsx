@@ -1,11 +1,11 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { useToast } from "./ui/use-toast";
 import { supabase } from '../supabaseClient';
 import { Cliente } from '../types/supabase-types';
@@ -19,31 +19,71 @@ const clienteSchema = z.object({
 
 type ClienteFormValues = Omit<Cliente, 'id' | 'criado_em'>;
 
-export function ClienteForm() {
+interface ClienteFormProps {
+  clienteParaEditar?: Cliente;
+  onClienteSalvo: () => void;
+}
+
+export function ClienteForm({ clienteParaEditar, onClienteSalvo }: ClienteFormProps) {
   const { toast } = useToast();
   const form = useForm<ClienteFormValues>({
     resolver: zodResolver(clienteSchema),
+    defaultValues: {
+      empresa_id: "",
+      nome: "",
+      tipo_cabelo: "",
+      condicao_cabelo: "",
+    },
   });
+
+  // Efeito para atualizar o formulário quando clienteParaEditar mudar
+  useEffect(() => {
+    if (clienteParaEditar) {
+      form.reset({
+        empresa_id: clienteParaEditar.empresa_id,
+        nome: clienteParaEditar.nome,
+        tipo_cabelo: clienteParaEditar.tipo_cabelo || "",
+        condicao_cabelo: clienteParaEditar.condicao_cabelo || "",
+      });
+    } else {
+      form.reset({
+        empresa_id: "",
+        nome: "",
+        tipo_cabelo: "",
+        condicao_cabelo: "",
+      });
+    }
+  }, [clienteParaEditar, form]);
 
   const onSubmit = async (data: ClienteFormValues) => {
     try {
-      const { data: cliente, error } = await supabase
-        .from('clientes')
-        .insert(data)
-        .single();
+      let result;
+      if (clienteParaEditar) {
+        result = await supabase
+          .from('clientes')
+          .update(data)
+          .eq('id', clienteParaEditar.id)
+          .single();
+      } else {
+        result = await supabase
+          .from('clientes')
+          .insert(data)
+          .single();
+      }
 
-      if (error) throw error;
+      if (result.error) throw result.error;
 
       toast({
-        title: "Cliente cadastrado",
-        description: "O cliente foi cadastrado com sucesso.",
+        title: clienteParaEditar ? "Cliente atualizado" : "Cliente cadastrado",
+        description: clienteParaEditar ? "O cliente foi atualizado com sucesso." : "O cliente foi cadastrado com sucesso.",
       });
 
       form.reset();
+      onClienteSalvo();
     } catch (error) {
       toast({
         title: "Erro",
-        description: "Ocorreu um erro ao cadastrar o cliente.",
+        description: `Ocorreu um erro ao ${clienteParaEditar ? 'atualizar' : 'cadastrar'} o cliente.`,
         variant: "destructive",
       });
     }
@@ -52,8 +92,8 @@ export function ClienteForm() {
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>Novo Cliente</CardTitle>
-        <CardDescription>Cadastre um novo cliente.</CardDescription>
+        <CardTitle>{clienteParaEditar ? 'Editar Cliente' : 'Novo Cliente'}</CardTitle>
+        <CardDescription>{clienteParaEditar ? 'Edite os dados do cliente.' : 'Cadastre um novo cliente.'}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -75,7 +115,7 @@ export function ClienteForm() {
               <Input id="condicao_cabelo" {...form.register("condicao_cabelo")} />
             </div>
           </div>
-          <Button type="submit" className="w-full">Cadastrar Cliente</Button>
+          <Button type="submit" className="w-full">{clienteParaEditar ? 'Atualizar Cliente' : 'Cadastrar Cliente'}</Button>
         </form>
       </CardContent>
     </Card>
