@@ -5,14 +5,21 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { Edit, Trash2 } from 'lucide-react';
 import { Button } from "./ui/button";
 import { Agendamento } from '../types/supabase-types';
+import { useToast } from "./ui/use-toast";
 
-export function AgendamentoList() {
+interface AgendamentoListProps {
+  onEditAgendamento: (agendamento: Agendamento) => void;
+  triggerRefetch: boolean;
+}
+
+export function AgendamentoList({ onEditAgendamento, triggerRefetch }: AgendamentoListProps) {
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchAgendamentos();
-  }, []);
+  }, [triggerRefetch]);
 
   async function fetchAgendamentos() {
     try {
@@ -25,17 +32,39 @@ export function AgendamentoList() {
       setAgendamentos(data || []);
     } catch (error) {
       console.error('Erro ao buscar agendamentos:', error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao buscar os agendamentos.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   }
 
-  const handleEdit = (id: string) => {
-    console.log('Editar agendamento', id);
-  };
+  const handleDelete = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('agendamentos')
+        .delete()
+        .eq('id', id);
 
-  const handleDelete = (id: string) => {
-    console.log('Excluir agendamento', id);
+      if (error) throw error;
+
+      toast({
+        title: "Agendamento excluído",
+        description: "O agendamento foi excluído com sucesso.",
+      });
+
+      fetchAgendamentos();
+    } catch (error) {
+      console.error('Erro ao excluir agendamento:', error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao excluir o agendamento.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -70,7 +99,7 @@ export function AgendamentoList() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleEdit(agendamento.id)}
+                          onClick={() => onEditAgendamento(agendamento)}
                         >
                           <Edit size={16} />
                         </Button>

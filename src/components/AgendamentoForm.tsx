@@ -1,5 +1,5 @@
-import React from "react";
-import { useForm } from "react-hook-form";
+import React, { useEffect } from "react";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "./ui/button";
@@ -13,45 +13,84 @@ import { supabase } from '../supabaseClient';
 import { Agendamento } from '../types/supabase-types';
 
 const agendamentoSchema = z.object({
-  empresa_id: z.string().uuid(),
-  usuario_id: z.string().uuid(),
-  cliente_id: z.string().uuid(),
-  data_agendamento: z.string().datetime(),
-  tipo_servico: z.string().nullable(),
-  status: z.enum(['pendente', 'confirmado', 'cancelado']).default('pendente'),
+  empresa_id: z.string().uuid("ID da empresa inválido"),
+  usuario_id: z.string().uuid("ID do usuário inválido"),
+  cliente_id: z.string().uuid("ID do cliente inválido"),
+  data_agendamento: z.string().min(1, "Data do agendamento é obrigatória"),
+  tipo_servico: z.string().min(1, "Tipo de serviço é obrigatório"),
+  status: z.enum(['pendente', 'confirmado', 'cancelado']),
   observacoes: z.string().nullable(),
 });
 
-type AgendamentoFormValues = Omit<Agendamento, 'id' | 'criado_em'>;
+type AgendamentoFormValues = z.infer<typeof agendamentoSchema>;
 
-export function AgendamentoForm() {
+interface AgendamentoFormProps {
+  agendamentoParaEditar?: Agendamento;
+  onAgendamentoSalvo: () => void;
+}
+
+export function AgendamentoForm({ agendamentoParaEditar, onAgendamentoSalvo }: AgendamentoFormProps) {
   const { toast } = useToast();
   const form = useForm<AgendamentoFormValues>({
     resolver: zodResolver(agendamentoSchema),
     defaultValues: {
       status: 'pendente',
+      empresa_id: '',
+      usuario_id: '',
+      cliente_id: '',
+      tipo_servico: '',
+      observacoes: '',
     },
   });
 
-  const onSubmit = async (data: AgendamentoFormValues) => {
-    try {
-      const { data: agendamento, error } = await supabase
-        .from('agendamentos')
-        .insert(data)
-        .single();
+  useEffect(() => {
+    if (agendamentoParaEditar) {
+      const dataAgendamento = new Date(agendamentoParaEditar.data_agendamento);
+      const formattedDate = dataAgendamento.toISOString().slice(0, 16); // Format: "YYYY-MM-DDTHH:mm"
 
-      if (error) throw error;
+      form.reset({
+        empresa_id: agendamentoParaEditar.empresa_id,
+        usuario_id: agendamentoParaEditar.usuario_id,
+        cliente_id: agendamentoParaEditar.cliente_id,
+        data_agendamento: formattedDate,
+        tipo_servico: agendamentoParaEditar.tipo_servico || '',
+        status: agendamentoParaEditar.status as 'pendente' | 'confirmado' | 'cancelado',
+        observacoes: agendamentoParaEditar.observacoes || '',
+      });
+    }
+  }, [agendamentoParaEditar, form]);
+
+  const onSubmit = async (data: AgendamentoFormValues) => {
+    console.log('Dados do formulário:', data);
+    try {
+      let result;
+      if (agendamentoParaEditar) {
+        result = await supabase
+          .from('agendamentos')
+          .update(data)
+          .eq('id', agendamentoParaEditar.id)
+          .single();
+      } else {
+        result = await supabase
+          .from('agendamentos')
+          .insert(data)
+          .single();
+      }
+
+      if (result.error) throw result.error;
 
       toast({
-        title: "Agendamento criado",
-        description: "O agendamento foi criado com sucesso.",
+        title: agendamentoParaEditar ? "Agendamento atualizado" : "Agendamento criado",
+        description: agendamentoParaEditar ? "O agendamento foi atualizado com sucesso." : "O agendamento foi criado com sucesso.",
       });
 
       form.reset();
+      onAgendamentoSalvo();
     } catch (error) {
+      console.error('Erro ao salvar agendamento:', error);
       toast({
         title: "Erro",
-        description: "Ocorreu um erro ao criar o agendamento.",
+        description: `Ocorreu um erro ao ${agendamentoParaEditar ? 'atualizar' : 'criar'} o agendamento: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
         variant: "destructive",
       });
     }
@@ -60,8 +99,8 @@ export function AgendamentoForm() {
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>Novo Agendamento</CardTitle>
-        <CardDescription>Crie um novo agendamento para um cliente.</CardDescription>
+        <CardTitle>{agendamentoParaEditar ? 'Editar Agendamento' : 'Novo Agendamento'}</CardTitle>
+        <CardDescription>{agendamentoParaEditar ? 'Edite os dados do agendamento.' : 'Crie um novo agendamento.'}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -69,42 +108,66 @@ export function AgendamentoForm() {
             <div>
               <Label htmlFor="empresa_id">Empresa</Label>
               <Input id="empresa_id" {...form.register("empresa_id")} />
+              {form.formState.errors.empresa_id && (
+                <p className="text-red-500">{form.formState.errors.empresa_id.message}</p>
+              )}
             </div>
             <div>
               <Label htmlFor="usuario_id">Usuário</Label>
               <Input id="usuario_id" {...form.register("usuario_id")} />
+              {form.formState.errors.usuario_id && (
+                <p className="text-red-500">{form.formState.errors.usuario_id.message}</p>
+              )}
             </div>
             <div>
               <Label htmlFor="cliente_id">Cliente</Label>
               <Input id="cliente_id" {...form.register("cliente_id")} />
+              {form.formState.errors.cliente_id && (
+                <p className="text-red-500">{form.formState.errors.cliente_id.message}</p>
+              )}
             </div>
             <div>
               <Label htmlFor="data_agendamento">Data do Agendamento</Label>
               <Input id="data_agendamento" type="datetime-local" {...form.register("data_agendamento")} />
+              {form.formState.errors.data_agendamento && (
+                <p className="text-red-500">{form.formState.errors.data_agendamento.message}</p>
+              )}
             </div>
             <div>
               <Label htmlFor="tipo_servico">Tipo de Serviço</Label>
               <Input id="tipo_servico" {...form.register("tipo_servico")} />
+              {form.formState.errors.tipo_servico && (
+                <p className="text-red-500">{form.formState.errors.tipo_servico.message}</p>
+              )}
             </div>
             <div>
               <Label htmlFor="status">Status</Label>
-              <Select onValueChange={(value: 'pendente' | 'confirmado' | 'cancelado') => form.setValue("status", value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pendente">Pendente</SelectItem>
-                  <SelectItem value="confirmado">Confirmado</SelectItem>
-                  <SelectItem value="cancelado">Cancelado</SelectItem>
-                </SelectContent>
-              </Select>
+              <Controller
+                name="status"
+                control={form.control}
+                render={({ field }) => (
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pendente">Pendente</SelectItem>
+                      <SelectItem value="confirmado">Confirmado</SelectItem>
+                      <SelectItem value="cancelado">Cancelado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {form.formState.errors.status && (
+                <p className="text-red-500">{form.formState.errors.status.message}</p>
+              )}
             </div>
           </div>
           <div>
             <Label htmlFor="observacoes">Observações</Label>
             <Textarea id="observacoes" {...form.register("observacoes")} />
           </div>
-          <Button type="submit" className="w-full">Criar Agendamento</Button>
+          <Button type="submit" className="w-full">{agendamentoParaEditar ? 'Atualizar Agendamento' : 'Criar Agendamento'}</Button>
         </form>
       </CardContent>
     </Card>
