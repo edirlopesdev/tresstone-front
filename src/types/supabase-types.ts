@@ -20,11 +20,11 @@ export interface Agendamento {
 }
 
 export interface Perfil {
-  id: string;
+  id: string; // UUID
+  empresa_id: string; // UUID
   nome: string;
-  descricao?: string;
-  permissoes: string[];
-  created_at: string;
+  cargo: string;
+  criado_em: string | null; // timestamp with time zone
 }
 
 export interface HistoricoColoracao {

@@ -8,14 +8,16 @@ import { Label } from "./ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { useToast } from "./ui/use-toast";
 import { supabase } from '../supabaseClient';
+import { Perfil } from '../types/supabase-types';
 
 const perfilSchema = z.object({
+  id: z.string().uuid(),
+  empresa_id: z.string().uuid(),
   nome: z.string().min(1, "O nome é obrigatório"),
-  descricao: z.string().optional(),
-  permissoes: z.array(z.string()).optional(),
+  cargo: z.string().min(1, "O cargo é obrigatório"),
 });
 
-type PerfilFormValues = z.infer<typeof perfilSchema>;
+type PerfilFormValues = Omit<Perfil, 'criado_em'>;
 
 export function PerfilForm() {
   const { toast } = useToast();
@@ -57,24 +59,21 @@ export function PerfilForm() {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="nome">Nome do Perfil</Label>
+              <Label htmlFor="id">ID do Usuário</Label>
+              <Input id="id" {...form.register("id")} />
+            </div>
+            <div>
+              <Label htmlFor="empresa_id">Empresa</Label>
+              <Input id="empresa_id" {...form.register("empresa_id")} />
+            </div>
+            <div>
+              <Label htmlFor="nome">Nome</Label>
               <Input id="nome" {...form.register("nome")} />
             </div>
             <div>
-              <Label htmlFor="descricao">Descrição</Label>
-              <Input id="descricao" {...form.register("descricao")} />
+              <Label htmlFor="cargo">Cargo</Label>
+              <Input id="cargo" {...form.register("cargo")} />
             </div>
-          </div>
-          <div>
-            <Label htmlFor="permissoes">Permissões (separadas por vírgula)</Label>
-            <Input 
-              id="permissoes" 
-              {...form.register("permissoes")} 
-              onChange={(e) => {
-                const permissoes = e.target.value.split(',').map(p => p.trim());
-                form.setValue("permissoes", permissoes);
-              }}
-            />
           </div>
           <Button type="submit" className="w-full">Criar Perfil</Button>
         </form>

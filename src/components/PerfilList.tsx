@@ -4,13 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import { Edit, Trash2 } from 'lucide-react';
 import { Button } from "./ui/button";
-
-interface Perfil {
-  id: string;
-  nome: string;
-  descricao: string;
-  permissoes?: string[]; // Tornando permissoes opcional
-}
+import { Perfil } from '../types/supabase-types';
 
 export function PerfilList() {
   const [perfis, setPerfis] = useState<Perfil[]>([]);
@@ -58,8 +52,8 @@ export function PerfilList() {
               <TableHeader>
                 <TableRow className="bg-gray-50">
                   <TableHead className="font-semibold">Nome</TableHead>
-                  <TableHead className="font-semibold">Descrição</TableHead>
-                  <TableHead className="font-semibold">Permissões</TableHead>
+                  <TableHead className="font-semibold">Cargo</TableHead>
+                  <TableHead className="font-semibold">Criado em</TableHead>
                   <TableHead className="font-semibold text-right pr-9">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -67,8 +61,8 @@ export function PerfilList() {
                 {perfis.map((perfil) => (
                   <TableRow key={perfil.id} className="hover:bg-gray-50">
                     <TableCell className="font-medium">{perfil.nome}</TableCell>
-                    <TableCell>{perfil.descricao}</TableCell>
-                    <TableCell>{perfil.permissoes ? perfil.permissoes.join(', ') : '-'}</TableCell>
+                    <TableCell>{perfil.cargo}</TableCell>
+                    <TableCell>{perfil.criado_em ? new Date(perfil.criado_em).toLocaleString() : '-'}</TableCell>
                     <TableCell className="text-right pr-2">
                       <div className="flex justify-end space-x-1">
                         <Button
