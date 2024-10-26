@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -20,31 +20,74 @@ const produtoSchema = z.object({
 
 type ProdutoFormValues = Omit<Produto, 'id' | 'criado_em'>;
 
-export function ProdutoForm() {
+interface ProdutoFormProps {
+  produtoParaEditar?: Produto;
+  onProdutoSalvo: () => void;
+}
+
+export function ProdutoForm({ produtoParaEditar, onProdutoSalvo }: ProdutoFormProps) {
   const { toast } = useToast();
   const form = useForm<ProdutoFormValues>({
     resolver: zodResolver(produtoSchema),
+    defaultValues: {
+      empresa_id: "",
+      nome: "",
+      marca: "",
+      tipo: "",
+      codigo_cor: "",
+    },
   });
+
+  useEffect(() => {
+    if (produtoParaEditar) {
+      form.reset({
+        empresa_id: produtoParaEditar.empresa_id,
+        nome: produtoParaEditar.nome,
+        marca: produtoParaEditar.marca,
+        tipo: produtoParaEditar.tipo,
+        codigo_cor: produtoParaEditar.codigo_cor || "",
+      });
+    } else {
+      form.reset({
+        empresa_id: "",
+        nome: "",
+        marca: "",
+        tipo: "",
+        codigo_cor: "",
+      });
+    }
+  }, [produtoParaEditar, form]);
 
   const onSubmit = async (data: ProdutoFormValues) => {
     try {
-      const { data: produto, error } = await supabase
-        .from('produtos')
-        .insert(data)
-        .single();
+      let result;
+      if (produtoParaEditar) {
+        result = await supabase
+          .from('produtos')
+          .update(data)
+          .eq('id', produtoParaEditar.id)
+          .single();
+      } else {
+        result = await supabase
+          .from('produtos')
+          .insert(data)
+          .single();
+      }
 
-      if (error) throw error;
+      if (result.error) throw result.error;
 
       toast({
-        title: "Produto criado",
-        description: "O produto foi criado com sucesso.",
+        title: produtoParaEditar ? "Produto atualizado" : "Produto criado",
+        description: produtoParaEditar ? "O produto foi atualizado com sucesso." : "O produto foi criado com sucesso.",
       });
 
       form.reset();
+      onProdutoSalvo();
     } catch (error) {
+      console.error('Erro ao salvar produto:', error);
       toast({
         title: "Erro",
-        description: "Ocorreu um erro ao criar o produto.",
+        description: `Ocorreu um erro ao ${produtoParaEditar ? 'atualizar' : 'criar'} o produto: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
         variant: "destructive",
       });
     }
@@ -53,8 +96,8 @@ export function ProdutoForm() {
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>Novo Produto</CardTitle>
-        <CardDescription>Adicione um novo produto ao catálogo.</CardDescription>
+        <CardTitle>{produtoParaEditar ? 'Editar Produto' : 'Novo Produto'}</CardTitle>
+        <CardDescription>{produtoParaEditar ? 'Edite os dados do produto.' : 'Adicione um novo produto ao catálogo.'}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -80,7 +123,7 @@ export function ProdutoForm() {
               <Input id="codigo_cor" {...form.register("codigo_cor")} />
             </div>
           </div>
-          <Button type="submit" className="w-full">Criar Produto</Button>
+          <Button type="submit" className="w-full">{produtoParaEditar ? 'Atualizar Produto' : 'Criar Produto'}</Button>
         </form>
       </CardContent>
     </Card>

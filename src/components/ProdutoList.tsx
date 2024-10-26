@@ -5,14 +5,21 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { Edit, Trash2 } from 'lucide-react';
 import { Button } from "./ui/button";
 import { Produto } from '../types/supabase-types';
+import { useToast } from "./ui/use-toast";
 
-export function ProdutoList() {
+interface ProdutoListProps {
+  onEditProduto: (produto: Produto) => void;
+  triggerRefetch: boolean;
+}
+
+export function ProdutoList({ onEditProduto, triggerRefetch }: ProdutoListProps) {
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchProdutos();
-  }, []);
+  }, [triggerRefetch]);
 
   async function fetchProdutos() {
     try {
@@ -25,17 +32,39 @@ export function ProdutoList() {
       setProdutos(data || []);
     } catch (error) {
       console.error('Erro ao buscar produtos:', error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao buscar os produtos.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   }
 
-  const handleEdit = (id: string) => {
-    console.log('Editar produto', id);
-  };
+  const handleDelete = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('produtos')
+        .delete()
+        .eq('id', id);
 
-  const handleDelete = (id: string) => {
-    console.log('Excluir produto', id);
+      if (error) throw error;
+
+      toast({
+        title: "Produto excluído",
+        description: "O produto foi excluído com sucesso.",
+      });
+
+      fetchProdutos();
+    } catch (error) {
+      console.error('Erro ao excluir produto:', error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao excluir o produto.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -70,7 +99,7 @@ export function ProdutoList() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleEdit(produto.id)}
+                          onClick={() => onEditProduto(produto)}
                         >
                           <Edit size={16} />
                         </Button>
