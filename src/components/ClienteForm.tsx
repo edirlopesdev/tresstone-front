@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/
 import { useToast } from "./ui/use-toast";
 import { supabase } from '../supabaseClient';
 import { Cliente } from '../types/supabase-types';
-import { SaveIcon } from "lucide-react";
+import { SaveIcon, ArrowLeft } from "lucide-react";
 
 const clienteSchema = z.object({
   empresa_id: z.string().uuid(),
@@ -23,9 +23,10 @@ type ClienteFormValues = Omit<Cliente, 'id' | 'criado_em'>;
 interface ClienteFormProps {
   clienteParaEditar?: Cliente;
   onClienteSalvo: () => void;
+  onVoltar: () => void;
 }
 
-export function ClienteForm({ clienteParaEditar, onClienteSalvo }: ClienteFormProps) {
+export function ClienteForm({ clienteParaEditar, onClienteSalvo, onVoltar }: ClienteFormProps) {
   const { toast } = useToast();
   const form = useForm<ClienteFormValues>({
     resolver: zodResolver(clienteSchema),
@@ -91,9 +92,11 @@ export function ClienteForm({ clienteParaEditar, onClienteSalvo }: ClienteFormPr
 
   return (
     <Card className="w-full">
-      <CardHeader>
-        <CardTitle>{clienteParaEditar ? 'Editar Cliente' : 'Novo Cliente'}</CardTitle>
-        <CardDescription>{clienteParaEditar ? 'Edite os dados do cliente.' : 'Cadastre um novo cliente.'}</CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle>{clienteParaEditar ? 'Editar Cliente' : 'Novo Cliente'}</CardTitle>
+          <CardDescription>{clienteParaEditar ? 'Edite os dados do cliente.' : 'Cadastre um novo cliente.'}</CardDescription>
+        </div>
       </CardHeader>
       <CardContent>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -115,8 +118,12 @@ export function ClienteForm({ clienteParaEditar, onClienteSalvo }: ClienteFormPr
               <Input id="condicao_cabelo" {...form.register("condicao_cabelo")} />
             </div>
           </div>
-          <div className="flex justify-end">
-            <Button type="submit" >
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="destructive" onClick={onVoltar}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Voltar
+            </Button>
+            <Button type="submit">
               <SaveIcon className="w-4 h-4 mr-2" />
               {clienteParaEditar ? 'Atualizar Cliente' : 'Cadastrar Cliente'}
             </Button>

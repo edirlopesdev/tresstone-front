@@ -2,17 +2,18 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2, PlusCircle } from 'lucide-react';
 import { Button } from "./ui/button";
 import { Cliente } from '../types/supabase-types';
 import { useToast } from "./ui/use-toast";
 
 interface ClienteListProps {
   onEditCliente: (cliente: Cliente) => void;
+  onNovoCliente: () => void;
   triggerRefetch: boolean;
 }
 
-export function ClienteList({ onEditCliente, triggerRefetch }: ClienteListProps) {
+export function ClienteList({ onEditCliente, onNovoCliente, triggerRefetch }: ClienteListProps) {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -69,8 +70,12 @@ export function ClienteList({ onEditCliente, triggerRefetch }: ClienteListProps)
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Lista de Clientes</CardTitle>
+        <Button onClick={onNovoCliente}>
+          <PlusCircle className="w-4 h-4 mr-2" />
+          Incluir
+        </Button>
       </CardHeader>
       <CardContent>
         {loading ? (
