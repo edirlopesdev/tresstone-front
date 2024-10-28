@@ -6,6 +6,7 @@ import { Edit, Trash2, PlusCircle } from 'lucide-react';
 import { Button } from "./ui/button";
 import { Produto } from '../types/supabase-types';
 import { useToast } from "./ui/use-toast";
+import { useAuth } from '../contexts/AuthContext';
 
 interface ProdutoListProps {
   onEditProduto: (produto: Produto) => void;
@@ -17,17 +18,23 @@ export function ProdutoList({ onEditProduto, onNovoProduto, triggerRefetch }: Pr
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { empresaId, loading: authLoading } = useAuth();
 
   useEffect(() => {
-    fetchProdutos();
-  }, [triggerRefetch]);
+    if (!authLoading && empresaId) {
+      fetchProdutos();
+    }
+  }, [triggerRefetch, empresaId, authLoading]);
 
   async function fetchProdutos() {
+    if (!empresaId) return;
+    
     try {
       setLoading(true);
       const { data, error } = await supabase
         .from('produtos')
-        .select('*');
+        .select('*')
+        .eq('empresa_id', empresaId);
 
       if (error) throw error;
       setProdutos(data || []);
@@ -72,13 +79,17 @@ export function ProdutoList({ onEditProduto, onNovoProduto, triggerRefetch }: Pr
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Lista de Produtos</CardTitle>
-        <Button onClick={onNovoProduto}>
+        <Button onClick={onNovoProduto} disabled={!empresaId}>
           <PlusCircle className="w-4 h-4 mr-2" />
           Incluir
         </Button>
       </CardHeader>
       <CardContent>
-        {loading ? (
+        {authLoading ? (
+          <p>Carregando autenticação...</p>
+        ) : !empresaId ? (
+          <p>Empresa não identificada</p>
+        ) : loading ? (
           <p>Carregando produtos...</p>
         ) : (
           <div className="overflow-x-auto">

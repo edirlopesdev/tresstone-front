@@ -10,6 +10,7 @@ import { useToast } from "./ui/use-toast";
 import { supabase } from '../supabaseClient';
 import { Produto } from '../types/supabase-types';
 import { SaveIcon, ArrowLeft } from "lucide-react";
+import { useAuth } from '../contexts/AuthContext';
 
 const produtoSchema = z.object({
   empresa_id: z.string().uuid(),
@@ -29,10 +30,12 @@ interface ProdutoFormProps {
 
 export function ProdutoForm({ produtoParaEditar, onProdutoSalvo, onVoltar }: ProdutoFormProps) {
   const { toast } = useToast();
+  const { empresaId } = useAuth();
+  
   const form = useForm<ProdutoFormValues>({
     resolver: zodResolver(produtoSchema),
     defaultValues: {
-      empresa_id: "",
+      empresa_id: empresaId || "",
       nome: "",
       marca: "",
       tipo: "",
@@ -40,39 +43,53 @@ export function ProdutoForm({ produtoParaEditar, onProdutoSalvo, onVoltar }: Pro
     },
   });
 
+  // Este useEffect mantém o empresa_id atualizado
+  useEffect(() => {
+    if (empresaId) {
+      form.setValue('empresa_id', empresaId);
+    }
+  }, [empresaId, form]);
+
+  // Este useEffect lida com a edição de produtos
   useEffect(() => {
     if (produtoParaEditar) {
       form.reset({
-        empresa_id: produtoParaEditar.empresa_id,
+        empresa_id: empresaId || "", // Usar o empresaId do contexto
         nome: produtoParaEditar.nome,
         marca: produtoParaEditar.marca,
         tipo: produtoParaEditar.tipo,
         codigo_cor: produtoParaEditar.codigo_cor || "",
       });
-    } else {
-      form.reset({
-        empresa_id: "",
-        nome: "",
-        marca: "",
-        tipo: "",
-        codigo_cor: "",
-      });
     }
-  }, [produtoParaEditar, form]);
+  }, [produtoParaEditar, empresaId, form]);
 
   const onSubmit = async (data: ProdutoFormValues) => {
+    if (!empresaId) {
+      toast({
+        title: "Erro",
+        description: "ID da empresa não encontrado",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
+      const produtoData = {
+        ...data,
+        empresa_id: empresaId, // Garantir que está usando o empresaId correto
+      };
+
       let result;
       if (produtoParaEditar) {
         result = await supabase
           .from('produtos')
-          .update(data)
+          .update(produtoData)
           .eq('id', produtoParaEditar.id)
           .single();
       } else {
         result = await supabase
           .from('produtos')
-          .insert(data)
+          .insert(produtoData)
           .single();
       }
 
@@ -83,7 +100,15 @@ export function ProdutoForm({ produtoParaEditar, onProdutoSalvo, onVoltar }: Pro
         description: produtoParaEditar ? "O produto foi atualizado com sucesso." : "O produto foi criado com sucesso.",
       });
 
-      form.reset();
+      // Não resetar o formulário completamente, apenas os campos de dados
+      form.reset({
+        empresa_id: empresaId,
+        nome: "",
+        marca: "",
+        tipo: "",
+        codigo_cor: "",
+      });
+      
       onProdutoSalvo();
     } catch (error) {
       console.error('Erro ao salvar produto:', error);
@@ -106,10 +131,7 @@ export function ProdutoForm({ produtoParaEditar, onProdutoSalvo, onVoltar }: Pro
       <CardContent>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="empresa_id">Empresa</Label>
-              <Input id="empresa_id" {...form.register("empresa_id")} />
-            </div>
+            <Input type="hidden" {...form.register("empresa_id")} />
             <div>
               <Label htmlFor="nome">Nome do Produto</Label>
               <Input id="nome" {...form.register("nome")} />

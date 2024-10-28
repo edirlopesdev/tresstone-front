@@ -1,7 +1,36 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { useEmpresaId } from '../hooks/useEmpresaId';
+import { supabase } from '../supabaseClient';
 
 const Dashboard = () => {
+  const empresaId = useEmpresaId();
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalClients: 0,
+    recentActivities: []
+  });
+
+  useEffect(() => {
+    async function fetchStats() {
+      if (!empresaId) return;
+      
+      const { data: users } = await supabase
+        .from('perfis')
+        .select('count')
+        .eq('empresa_id', empresaId);
+
+      const { data: clients } = await supabase
+        .from('clientes')
+        .select('count')
+        .eq('empresa_id', empresaId);
+
+      // ... atualizar stats
+    }
+    
+    fetchStats();
+  }, [empresaId]);
+
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
@@ -16,7 +45,7 @@ const Dashboard = () => {
                 <CardTitle>Total de Usuários</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold">0</p>
+                <p className="text-3xl font-bold">{stats.totalUsers}</p>
               </CardContent>
             </Card>
             <Card>
@@ -24,7 +53,7 @@ const Dashboard = () => {
                 <CardTitle>Total de Empresas</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold">0</p>
+                <p className="text-3xl font-bold">{stats.totalClients}</p>
               </CardContent>
             </Card>
             <Card>
