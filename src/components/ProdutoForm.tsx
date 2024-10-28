@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/
 import { useToast } from "./ui/use-toast";
 import { supabase } from '../supabaseClient';
 import { Produto } from '../types/supabase-types';
-import { SaveIcon } from "lucide-react";
+import { SaveIcon, ArrowLeft } from "lucide-react";
 
 const produtoSchema = z.object({
   empresa_id: z.string().uuid(),
@@ -24,9 +24,10 @@ type ProdutoFormValues = Omit<Produto, 'id' | 'criado_em'>;
 interface ProdutoFormProps {
   produtoParaEditar?: Produto;
   onProdutoSalvo: () => void;
+  onVoltar: () => void;
 }
 
-export function ProdutoForm({ produtoParaEditar, onProdutoSalvo }: ProdutoFormProps) {
+export function ProdutoForm({ produtoParaEditar, onProdutoSalvo, onVoltar }: ProdutoFormProps) {
   const { toast } = useToast();
   const form = useForm<ProdutoFormValues>({
     resolver: zodResolver(produtoSchema),
@@ -96,9 +97,11 @@ export function ProdutoForm({ produtoParaEditar, onProdutoSalvo }: ProdutoFormPr
 
   return (
     <Card className="w-full">
-      <CardHeader>
-        <CardTitle>{produtoParaEditar ? 'Editar Produto' : 'Novo Produto'}</CardTitle>
-        <CardDescription>{produtoParaEditar ? 'Edite os dados do produto.' : 'Adicione um novo produto ao catálogo.'}</CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle>{produtoParaEditar ? 'Editar Produto' : 'Novo Produto'}</CardTitle>
+          <CardDescription>{produtoParaEditar ? 'Edite os dados do produto.' : 'Adicione um novo produto ao catálogo.'}</CardDescription>
+        </div>
       </CardHeader>
       <CardContent>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -124,7 +127,11 @@ export function ProdutoForm({ produtoParaEditar, onProdutoSalvo }: ProdutoFormPr
               <Input id="codigo_cor" {...form.register("codigo_cor")} />
             </div>
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="destructive" onClick={onVoltar}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Voltar
+            </Button>
             <Button type="submit">
               <SaveIcon className="w-4 h-4 mr-2" />
               {produtoParaEditar ? 'Atualizar Produto' : 'Cadastrar Produto'}

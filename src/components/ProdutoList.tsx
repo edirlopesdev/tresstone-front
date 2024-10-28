@@ -2,17 +2,18 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2, PlusCircle } from 'lucide-react';
 import { Button } from "./ui/button";
 import { Produto } from '../types/supabase-types';
 import { useToast } from "./ui/use-toast";
 
 interface ProdutoListProps {
   onEditProduto: (produto: Produto) => void;
+  onNovoProduto: () => void;
   triggerRefetch: boolean;
 }
 
-export function ProdutoList({ onEditProduto, triggerRefetch }: ProdutoListProps) {
+export function ProdutoList({ onEditProduto, onNovoProduto, triggerRefetch }: ProdutoListProps) {
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -69,8 +70,12 @@ export function ProdutoList({ onEditProduto, triggerRefetch }: ProdutoListProps)
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Lista de Produtos</CardTitle>
+        <Button onClick={onNovoProduto}>
+          <PlusCircle className="w-4 h-4 mr-2" />
+          Incluir
+        </Button>
       </CardHeader>
       <CardContent>
         {loading ? (
