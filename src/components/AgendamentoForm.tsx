@@ -11,7 +11,7 @@ import { Textarea } from "../components/ui/textarea"
 import { useToast } from "./ui/use-toast";
 import { supabase } from '../supabaseClient';
 import { Agendamento } from '../types/supabase-types';
-import { SaveIcon } from "lucide-react";
+import { SaveIcon, ArrowLeft } from "lucide-react";
 
 const agendamentoSchema = z.object({
   empresa_id: z.string().uuid("ID da empresa inválido"),
@@ -28,9 +28,10 @@ type AgendamentoFormValues = z.infer<typeof agendamentoSchema>;
 interface AgendamentoFormProps {
   agendamentoParaEditar?: Agendamento;
   onAgendamentoSalvo: () => void;
+  onVoltar: () => void;
 }
 
-export function AgendamentoForm({ agendamentoParaEditar, onAgendamentoSalvo }: AgendamentoFormProps) {
+export function AgendamentoForm({ agendamentoParaEditar, onAgendamentoSalvo, onVoltar }: AgendamentoFormProps) {
   const { toast } = useToast();
   const form = useForm<AgendamentoFormValues>({
     resolver: zodResolver(agendamentoSchema),
@@ -99,9 +100,11 @@ export function AgendamentoForm({ agendamentoParaEditar, onAgendamentoSalvo }: A
 
   return (
     <Card className="w-full">
-      <CardHeader>
-        <CardTitle>{agendamentoParaEditar ? 'Editar Agendamento' : 'Novo Agendamento'}</CardTitle>
-        <CardDescription>{agendamentoParaEditar ? 'Edite os dados do agendamento.' : 'Crie um novo agendamento.'}</CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle>{agendamentoParaEditar ? 'Editar Agendamento' : 'Novo Agendamento'}</CardTitle>
+          <CardDescription>{agendamentoParaEditar ? 'Edite os dados do agendamento.' : 'Crie um novo agendamento.'}</CardDescription>
+        </div>
       </CardHeader>
       <CardContent>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -168,7 +171,11 @@ export function AgendamentoForm({ agendamentoParaEditar, onAgendamentoSalvo }: A
             <Label htmlFor="observacoes">Observações</Label>
             <Textarea id="observacoes" {...form.register("observacoes")} />
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="destructive" onClick={onVoltar}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Voltar
+            </Button>
             <Button type="submit">
               <SaveIcon className="w-4 h-4 mr-2" />
               {agendamentoParaEditar ? 'Atualizar Agendamento' : 'Cadastrar Agendamento'}

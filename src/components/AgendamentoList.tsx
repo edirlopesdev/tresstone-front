@@ -2,17 +2,18 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2, PlusCircle } from 'lucide-react';
 import { Button } from "./ui/button";
 import { Agendamento } from '../types/supabase-types';
 import { useToast } from "./ui/use-toast";
 
 interface AgendamentoListProps {
   onEditAgendamento: (agendamento: Agendamento) => void;
+  onNovoAgendamento: () => void;
   triggerRefetch: boolean;
 }
 
-export function AgendamentoList({ onEditAgendamento, triggerRefetch }: AgendamentoListProps) {
+export function AgendamentoList({ onEditAgendamento, onNovoAgendamento, triggerRefetch }: AgendamentoListProps) {
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -69,8 +70,12 @@ export function AgendamentoList({ onEditAgendamento, triggerRefetch }: Agendamen
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Lista de Agendamentos</CardTitle>
+        <Button onClick={onNovoAgendamento}>
+          <PlusCircle className="w-4 h-4 mr-2" />
+          Incluir
+        </Button>
       </CardHeader>
       <CardContent>
         {loading ? (
