@@ -12,6 +12,7 @@ import { useToast } from "./ui/use-toast";
 import { supabase } from '../supabaseClient';
 import { Agendamento } from '../types/supabase-types';
 import { SaveIcon, ArrowLeft } from "lucide-react";
+import { useAuth } from '../contexts/AuthContext';
 
 const agendamentoSchema = z.object({
   empresa_id: z.string().uuid("ID da empresa inválido"),
@@ -33,26 +34,40 @@ interface AgendamentoFormProps {
 
 export function AgendamentoForm({ agendamentoParaEditar, onAgendamentoSalvo, onVoltar }: AgendamentoFormProps) {
   const { toast } = useToast();
+  const { empresaId, user } = useAuth();
+  
   const form = useForm<AgendamentoFormValues>({
     resolver: zodResolver(agendamentoSchema),
     defaultValues: {
+      empresa_id: empresaId || "",
+      usuario_id: user?.id || "",
       status: 'pendente',
-      empresa_id: '',
-      usuario_id: '',
       cliente_id: '',
       tipo_servico: '',
       observacoes: '',
+      data_agendamento: '',
     },
   });
 
+  // Este useEffect mantém o empresa_id e usuario_id atualizados
+  useEffect(() => {
+    if (empresaId) {
+      form.setValue('empresa_id', empresaId);
+    }
+    if (user?.id) {
+      form.setValue('usuario_id', user.id);
+    }
+  }, [empresaId, user, form]);
+
+  // Este useEffect lida com a edição de agendamentos
   useEffect(() => {
     if (agendamentoParaEditar) {
       const dataAgendamento = new Date(agendamentoParaEditar.data_agendamento);
-      const formattedDate = dataAgendamento.toISOString().slice(0, 16); // Format: "YYYY-MM-DDTHH:mm"
+      const formattedDate = dataAgendamento.toISOString().slice(0, 16);
 
       form.reset({
-        empresa_id: agendamentoParaEditar.empresa_id,
-        usuario_id: agendamentoParaEditar.usuario_id,
+        empresa_id: empresaId || "",
+        usuario_id: user?.id || "",
         cliente_id: agendamentoParaEditar.cliente_id,
         data_agendamento: formattedDate,
         tipo_servico: agendamentoParaEditar.tipo_servico || '',
@@ -60,22 +75,36 @@ export function AgendamentoForm({ agendamentoParaEditar, onAgendamentoSalvo, onV
         observacoes: agendamentoParaEditar.observacoes || '',
       });
     }
-  }, [agendamentoParaEditar, form]);
+  }, [agendamentoParaEditar, empresaId, user, form]);
 
   const onSubmit = async (data: AgendamentoFormValues) => {
-    console.log('Dados do formulário:', data);
+    if (!empresaId) {
+      toast({
+        title: "Erro",
+        description: "ID da empresa não encontrado",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
+      const agendamentoData = {
+        ...data,
+        empresa_id: empresaId,
+        usuario_id: user?.id,
+      };
+
       let result;
       if (agendamentoParaEditar) {
         result = await supabase
           .from('agendamentos')
-          .update(data)
+          .update(agendamentoData)
           .eq('id', agendamentoParaEditar.id)
           .single();
       } else {
         result = await supabase
           .from('agendamentos')
-          .insert(data)
+          .insert(agendamentoData)
           .single();
       }
 
@@ -86,7 +115,17 @@ export function AgendamentoForm({ agendamentoParaEditar, onAgendamentoSalvo, onV
         description: agendamentoParaEditar ? "O agendamento foi atualizado com sucesso." : "O agendamento foi criado com sucesso.",
       });
 
-      form.reset();
+      // Não resetar o formulário completamente, apenas os campos de dados
+      form.reset({
+        empresa_id: empresaId,
+        usuario_id: user?.id || "",
+        cliente_id: "",
+        data_agendamento: "",
+        tipo_servico: "",
+        status: "pendente",
+        observacoes: "",
+      });
+      
       onAgendamentoSalvo();
     } catch (error) {
       console.error('Erro ao salvar agendamento:', error);
@@ -109,20 +148,8 @@ export function AgendamentoForm({ agendamentoParaEditar, onAgendamentoSalvo, onV
       <CardContent>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <Label htmlFor="empresa_id">Empresa</Label>
-              <Input id="empresa_id" {...form.register("empresa_id")} />
-              {form.formState.errors.empresa_id && (
-                <p className="text-red-500">{form.formState.errors.empresa_id.message}</p>
-              )}
-            </div>
-            <div>
-              <Label htmlFor="usuario_id">Usuário</Label>
-              <Input id="usuario_id" {...form.register("usuario_id")} />
-              {form.formState.errors.usuario_id && (
-                <p className="text-red-500">{form.formState.errors.usuario_id.message}</p>
-              )}
-            </div>
+            <Input type="hidden" {...form.register("empresa_id")} />
+            <Input type="hidden" {...form.register("usuario_id")} />
             <div>
               <Label htmlFor="cliente_id">Cliente</Label>
               <Input id="cliente_id" {...form.register("cliente_id")} />

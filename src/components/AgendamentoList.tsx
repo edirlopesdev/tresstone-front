@@ -6,6 +6,9 @@ import { Edit, Trash2, PlusCircle } from 'lucide-react';
 import { Button } from "./ui/button";
 import { Agendamento } from '../types/supabase-types';
 import { useToast } from "./ui/use-toast";
+import { useAuth } from '../contexts/AuthContext';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface AgendamentoListProps {
   onEditAgendamento: (agendamento: Agendamento) => void;
@@ -17,17 +20,29 @@ export function AgendamentoList({ onEditAgendamento, onNovoAgendamento, triggerR
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { empresaId, loading: authLoading } = useAuth();
 
   useEffect(() => {
-    fetchAgendamentos();
-  }, [triggerRefetch]);
+    if (!authLoading && empresaId) {
+      fetchAgendamentos();
+    }
+  }, [triggerRefetch, empresaId, authLoading]);
 
   async function fetchAgendamentos() {
+    if (!empresaId) return;
+    
     try {
       setLoading(true);
       const { data, error } = await supabase
         .from('agendamentos')
-        .select('*');
+        .select(`
+          *,
+          clientes (
+            nome
+          )
+        `)
+        .eq('empresa_id', empresaId)
+        .order('data_agendamento', { ascending: true });
 
       if (error) throw error;
       setAgendamentos(data || []);
@@ -68,25 +83,45 @@ export function AgendamentoList({ onEditAgendamento, onNovoAgendamento, triggerR
     }
   };
 
+  const formatarData = (data: string) => {
+    return format(new Date(data), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'confirmado':
+        return 'text-green-600';
+      case 'cancelado':
+        return 'text-red-600';
+      default:
+        return 'text-yellow-600';
+    }
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Lista de Agendamentos</CardTitle>
-        <Button onClick={onNovoAgendamento}>
+        <Button onClick={onNovoAgendamento} disabled={!empresaId}>
           <PlusCircle className="w-4 h-4 mr-2" />
           Incluir
         </Button>
       </CardHeader>
       <CardContent>
-        {loading ? (
+        {authLoading ? (
+          <p>Carregando autenticação...</p>
+        ) : !empresaId ? (
+          <p>Empresa não identificada</p>
+        ) : loading ? (
           <p>Carregando agendamentos...</p>
         ) : (
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow className="bg-gray-50">
-                  <TableHead className="font-semibold">Data</TableHead>
-                  <TableHead className="font-semibold">Tipo de Serviço</TableHead>
+                  <TableHead className="font-semibold">Data/Hora</TableHead>
+                  <TableHead className="font-semibold">Cliente</TableHead>
+                  <TableHead className="font-semibold">Serviço</TableHead>
                   <TableHead className="font-semibold">Status</TableHead>
                   <TableHead className="font-semibold">Observações</TableHead>
                   <TableHead className="font-semibold text-right pr-9">Ações</TableHead>
@@ -95,9 +130,16 @@ export function AgendamentoList({ onEditAgendamento, onNovoAgendamento, triggerR
               <TableBody>
                 {agendamentos.map((agendamento) => (
                   <TableRow key={agendamento.id} className="hover:bg-gray-50">
-                    <TableCell className="font-medium">{new Date(agendamento.data_agendamento).toLocaleString()}</TableCell>
+                    <TableCell>{formatarData(agendamento.data_agendamento)}</TableCell>
+                    <TableCell className="font-medium">
+                      {(agendamento as any).clientes?.nome || 'Cliente não encontrado'}
+                    </TableCell>
                     <TableCell>{agendamento.tipo_servico}</TableCell>
-                    <TableCell>{agendamento.status}</TableCell>
+                    <TableCell>
+                      <span className={getStatusColor(agendamento.status || '')}>
+                        {agendamento.status ? agendamento.status.charAt(0).toUpperCase() + agendamento.status.slice(1) : '-'}
+                      </span>
+                    </TableCell>
                     <TableCell>{agendamento.observacoes || '-'}</TableCell>
                     <TableCell className="text-right pr-2">
                       <div className="flex justify-end space-x-1">
@@ -121,7 +163,7 @@ export function AgendamentoList({ onEditAgendamento, onNovoAgendamento, triggerR
                 ))}
                 {agendamentos.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center text-gray-500 py-8">
+                    <TableCell colSpan={6} className="text-center text-gray-500 py-8">
                       Nenhum agendamento cadastrado
                     </TableCell>
                   </TableRow>
