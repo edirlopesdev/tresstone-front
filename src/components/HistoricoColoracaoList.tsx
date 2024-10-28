@@ -2,17 +2,18 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2, PlusCircle } from 'lucide-react';
 import { Button } from "./ui/button";
 import { HistoricoColoracao } from '../types/supabase-types';
 import { useToast } from "./ui/use-toast";
 
 interface HistoricoColoracaoListProps {
   onEditHistorico: (historico: HistoricoColoracao) => void;
+  onNovoHistorico: () => void;
   triggerRefetch: boolean;
 }
 
-export function HistoricoColoracaoList({ onEditHistorico, triggerRefetch }: HistoricoColoracaoListProps) {
+export function HistoricoColoracaoList({ onEditHistorico, onNovoHistorico, triggerRefetch }: HistoricoColoracaoListProps) {
   const [historicoColoracao, setHistoricoColoracao] = useState<HistoricoColoracao[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -69,8 +70,12 @@ export function HistoricoColoracaoList({ onEditHistorico, triggerRefetch }: Hist
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Histórico de Coloração</CardTitle>
+        <Button onClick={onNovoHistorico}>
+          <PlusCircle className="w-4 h-4 mr-2" />
+          Incluir
+        </Button>
       </CardHeader>
       <CardContent>
         {loading ? (
@@ -83,6 +88,7 @@ export function HistoricoColoracaoList({ onEditHistorico, triggerRefetch }: Hist
                   <TableHead className="font-semibold">Data</TableHead>
                   <TableHead className="font-semibold">Cor Base</TableHead>
                   <TableHead className="font-semibold">Cor Alvo</TableHead>
+                  <TableHead className="font-semibold">Produtos Usados</TableHead>
                   <TableHead className="font-semibold">Técnicas Usadas</TableHead>
                   <TableHead className="font-semibold text-right pr-9">Ações</TableHead>
                 </TableRow>
@@ -93,8 +99,8 @@ export function HistoricoColoracaoList({ onEditHistorico, triggerRefetch }: Hist
                     <TableCell className="font-medium">{new Date(historico.data).toLocaleString()}</TableCell>
                     <TableCell>{historico.cor_base}</TableCell>
                     <TableCell>{historico.cor_alvo}</TableCell>
-                    <TableCell>{typeof historico.produtos_usados === 'object' ? JSON.stringify(historico.produtos_usados) : (historico.produtos_usados || '-')}</TableCell>
-                    <TableCell>{Array.isArray(historico.tecnicas_usadas) ? historico.tecnicas_usadas.join(', ') : (historico.tecnicas_usadas || '-')}</TableCell>
+                    <TableCell>{historico.produtos_usados || '-'}</TableCell>
+                    <TableCell>{historico.tecnicas_usadas || '-'}</TableCell>
                     <TableCell className="text-right pr-2">
                       <div className="flex justify-end space-x-1">
                         <Button
@@ -117,7 +123,7 @@ export function HistoricoColoracaoList({ onEditHistorico, triggerRefetch }: Hist
                 ))}
                 {historicoColoracao.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center text-gray-500 py-8">
+                    <TableCell colSpan={6} className="text-center text-gray-500 py-8">
                       Nenhum histórico de coloração registrado
                     </TableCell>
                   </TableRow>

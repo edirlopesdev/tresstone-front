@@ -10,7 +10,7 @@ import { Textarea } from "../components/ui/textarea"
 import { useToast } from "./ui/use-toast";
 import { supabase } from '../supabaseClient';
 import { HistoricoColoracao } from '../types/supabase-types';
-import { SaveIcon } from "lucide-react";
+import { SaveIcon, ArrowLeft } from "lucide-react";
 
 const historicoColoracaoSchema = z.object({
   cliente_id: z.string().uuid(),
@@ -27,9 +27,10 @@ type HistoricoColoracaoFormValues = z.infer<typeof historicoColoracaoSchema>;
 interface HistoricoColoracaoFormProps {
   historicoParaEditar?: HistoricoColoracao;
   onHistoricoSalvo: () => void;
+  onVoltar: () => void;
 }
 
-export function HistoricoColoracaoForm({ historicoParaEditar, onHistoricoSalvo }: HistoricoColoracaoFormProps) {
+export function HistoricoColoracaoForm({ historicoParaEditar, onHistoricoSalvo, onVoltar }: HistoricoColoracaoFormProps) {
   const { toast } = useToast();
   const form = useForm<HistoricoColoracaoFormValues>({
     resolver: zodResolver(historicoColoracaoSchema),
@@ -108,9 +109,11 @@ export function HistoricoColoracaoForm({ historicoParaEditar, onHistoricoSalvo }
 
   return (
     <Card className="w-full">
-      <CardHeader>
-        <CardTitle>{historicoParaEditar ? 'Editar Histórico de Coloração' : 'Novo Histórico de Coloração'}</CardTitle>
-        <CardDescription>{historicoParaEditar ? 'Edite os dados do histórico de coloração.' : 'Registre um novo histórico de coloração para um cliente.'}</CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle>{historicoParaEditar ? 'Editar Histórico de Coloração' : 'Novo Histórico de Coloração'}</CardTitle>
+          <CardDescription>{historicoParaEditar ? 'Edite os dados do histórico de coloração.' : 'Registre um novo histórico de coloração para um cliente.'}</CardDescription>
+        </div>
       </CardHeader>
       <CardContent>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -156,7 +159,11 @@ export function HistoricoColoracaoForm({ historicoParaEditar, onHistoricoSalvo }
             <Label htmlFor="observacoes">Observações</Label>
             <Textarea id="observacoes" {...form.register("observacoes")} />
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="destructive" onClick={onVoltar}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Voltar
+            </Button>
             <Button type="submit">
               <SaveIcon className="w-4 h-4 mr-2" />
               {historicoParaEditar ? 'Atualizar Histórico' : 'Cadastrar Histórico'}
