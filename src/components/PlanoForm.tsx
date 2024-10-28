@@ -10,7 +10,7 @@ import { useToast } from "./ui/use-toast";
 import { supabase } from '../supabaseClient';
 import { Plano } from '../types/supabase-types';
 import { MultiSelect } from "./ui/multi-select";
-import { SaveIcon } from "lucide-react";
+import { SaveIcon, ArrowLeft } from "lucide-react";
 
 const recursosDisponiveis = [
   { value: "agendamentos", label: "Agendamentos" },
@@ -32,9 +32,10 @@ type PlanoFormValues = Omit<Plano, 'id' | 'criado_em'> & { recursos: string[] };
 interface PlanoFormProps {
   planoParaEditar?: Plano;
   onPlanoSalvo: () => void;
+  onVoltar: () => void;
 }
 
-export function PlanoForm({ planoParaEditar, onPlanoSalvo }: PlanoFormProps) {
+export function PlanoForm({ planoParaEditar, onPlanoSalvo, onVoltar }: PlanoFormProps) {
   const { toast } = useToast();
   const form = useForm<PlanoFormValues>({
     resolver: zodResolver(planoSchema),
@@ -94,9 +95,11 @@ export function PlanoForm({ planoParaEditar, onPlanoSalvo }: PlanoFormProps) {
 
   return (
     <Card className="w-full">
-      <CardHeader>
-        <CardTitle>{planoParaEditar ? 'Editar Plano' : 'Novo Plano'}</CardTitle>
-        <CardDescription>{planoParaEditar ? 'Edite os dados do plano.' : 'Crie um novo plano de assinatura.'}</CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle>{planoParaEditar ? 'Editar Plano' : 'Novo Plano'}</CardTitle>
+          <CardDescription>{planoParaEditar ? 'Edite os dados do plano.' : 'Crie um novo plano de assinatura.'}</CardDescription>
+        </div>
       </CardHeader>
       <CardContent>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -128,7 +131,11 @@ export function PlanoForm({ planoParaEditar, onPlanoSalvo }: PlanoFormProps) {
               )}
             />
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="destructive" onClick={onVoltar}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Voltar
+            </Button>
             <Button type="submit">
               <SaveIcon className="w-4 h-4 mr-2" />
               {planoParaEditar ? 'Atualizar Plano' : 'Cadastrar Plano'}

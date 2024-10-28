@@ -2,18 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2, PlusCircle } from 'lucide-react';
 import { Button } from "./ui/button";
 import { Plano } from '../types/supabase-types';
+import { useToast } from "./ui/use-toast";
 
 interface PlanoListProps {
   onEditPlano: (plano: Plano) => void;
+  onNovoPlano: () => void;
   triggerRefetch: boolean;
 }
 
-export function PlanoList({ onEditPlano, triggerRefetch }: PlanoListProps) {
+export function PlanoList({ onEditPlano, onNovoPlano, triggerRefetch }: PlanoListProps) {
   const [planos, setPlanos] = useState<Plano[]>([]);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchPlanos();
@@ -30,19 +33,49 @@ export function PlanoList({ onEditPlano, triggerRefetch }: PlanoListProps) {
       setPlanos(data || []);
     } catch (error) {
       console.error('Erro ao buscar planos:', error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao buscar os planos.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   }
 
-  const handleDelete = (id: string) => {
-    console.log('Excluir plano', id);
+  const handleDelete = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('planos')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Plano excluído",
+        description: "O plano foi excluído com sucesso.",
+      });
+
+      fetchPlanos();
+    } catch (error) {
+      console.error('Erro ao excluir plano:', error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao excluir o plano.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Lista de Planos</CardTitle>
+        <Button onClick={onNovoPlano}>
+          <PlusCircle className="w-4 h-4 mr-2" />
+          Incluir
+        </Button>
       </CardHeader>
       <CardContent>
         {loading ? (
@@ -65,7 +98,7 @@ export function PlanoList({ onEditPlano, triggerRefetch }: PlanoListProps) {
                     <TableCell className="font-medium">{plano.nome}</TableCell>
                     <TableCell>{plano.max_usuarios}</TableCell>
                     <TableCell>R$ {plano.preco.toFixed(2)}</TableCell>
-                    <TableCell>{JSON.stringify(plano.recursos)}</TableCell>
+                    <TableCell>{Object.keys(plano.recursos).join(', ')}</TableCell>
                     <TableCell className="text-right pr-2">
                       <div className="flex justify-end space-x-1">
                         <Button
