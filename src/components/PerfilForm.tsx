@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/
 import { useToast } from "./ui/use-toast";
 import { supabase } from '../supabaseClient';
 import { Perfil } from '../types/supabase-types';
-import { SaveIcon } from "lucide-react";
+import { SaveIcon, ArrowLeft } from "lucide-react";
 
 const perfilSchema = z.object({
   id: z.string().uuid(),
@@ -23,9 +23,10 @@ type PerfilFormValues = Omit<Perfil, 'criado_em'>;
 interface PerfilFormProps {
   perfilParaEditar?: Perfil;
   onPerfilSalvo: () => void;
+  onVoltar: () => void;
 }
 
-export function PerfilForm({ perfilParaEditar, onPerfilSalvo }: PerfilFormProps) {
+export function PerfilForm({ perfilParaEditar, onPerfilSalvo, onVoltar }: PerfilFormProps) {
   const { toast } = useToast();
   const form = useForm<PerfilFormValues>({
     resolver: zodResolver(perfilSchema),
@@ -92,9 +93,11 @@ export function PerfilForm({ perfilParaEditar, onPerfilSalvo }: PerfilFormProps)
 
   return (
     <Card className="w-full">
-      <CardHeader>
-        <CardTitle>{perfilParaEditar ? 'Editar Perfil' : 'Novo Perfil'}</CardTitle>
-        <CardDescription>{perfilParaEditar ? 'Edite os dados do perfil.' : 'Crie um novo perfil de usuário.'}</CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle>{perfilParaEditar ? 'Editar Perfil' : 'Novo Perfil'}</CardTitle>
+          <CardDescription>{perfilParaEditar ? 'Edite os dados do perfil.' : 'Crie um novo perfil de usuário.'}</CardDescription>
+        </div>
       </CardHeader>
       <CardContent>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -128,7 +131,11 @@ export function PerfilForm({ perfilParaEditar, onPerfilSalvo }: PerfilFormProps)
               )}
             </div>
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="destructive" onClick={onVoltar}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Voltar
+            </Button>
             <Button type="submit">
               <SaveIcon className="w-4 h-4 mr-2" />
               {perfilParaEditar ? 'Atualizar Perfil' : 'Cadastrar Perfil'}
