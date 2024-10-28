@@ -11,6 +11,7 @@ import { Textarea } from "../components/ui/textarea"
 import { useToast } from "./ui/use-toast";
 import { supabase } from '../supabaseClient';
 import { Agendamento } from '../types/supabase-types';
+import { SaveIcon } from "lucide-react";
 
 const agendamentoSchema = z.object({
   empresa_id: z.string().uuid("ID da empresa inválido"),
@@ -167,7 +168,12 @@ export function AgendamentoForm({ agendamentoParaEditar, onAgendamentoSalvo }: A
             <Label htmlFor="observacoes">Observações</Label>
             <Textarea id="observacoes" {...form.register("observacoes")} />
           </div>
-          <Button type="submit" className="w-full">{agendamentoParaEditar ? 'Atualizar Agendamento' : 'Criar Agendamento'}</Button>
+          <div className="flex justify-end">
+            <Button type="submit">
+              <SaveIcon className="w-4 h-4 mr-2" />
+              {agendamentoParaEditar ? 'Atualizar Agendamento' : 'Cadastrar Agendamento'}
+            </Button>
+          </div>
         </form>
       </CardContent>
     </Card>

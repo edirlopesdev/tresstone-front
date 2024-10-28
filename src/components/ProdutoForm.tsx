@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/
 import { useToast } from "./ui/use-toast";
 import { supabase } from '../supabaseClient';
 import { Produto } from '../types/supabase-types';
+import { SaveIcon } from "lucide-react";
 
 const produtoSchema = z.object({
   empresa_id: z.string().uuid(),
@@ -123,7 +124,12 @@ export function ProdutoForm({ produtoParaEditar, onProdutoSalvo }: ProdutoFormPr
               <Input id="codigo_cor" {...form.register("codigo_cor")} />
             </div>
           </div>
-          <Button type="submit" className="w-full">{produtoParaEditar ? 'Atualizar Produto' : 'Criar Produto'}</Button>
+          <div className="flex justify-end">
+            <Button type="submit">
+              <SaveIcon className="w-4 h-4 mr-2" />
+              {produtoParaEditar ? 'Atualizar Produto' : 'Cadastrar Produto'}
+            </Button>
+          </div>
         </form>
       </CardContent>
     </Card>

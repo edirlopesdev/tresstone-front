@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/
 import { useToast } from "./ui/use-toast";
 import { supabase } from '../supabaseClient';
 import { Perfil } from '../types/supabase-types';
+import { SaveIcon } from "lucide-react";
 
 const perfilSchema = z.object({
   id: z.string().uuid(),
@@ -127,7 +128,12 @@ export function PerfilForm({ perfilParaEditar, onPerfilSalvo }: PerfilFormProps)
               )}
             </div>
           </div>
-          <Button type="submit" className="w-full">{perfilParaEditar ? 'Atualizar Perfil' : 'Criar Perfil'}</Button>
+          <div className="flex justify-end">
+            <Button type="submit">
+              <SaveIcon className="w-4 h-4 mr-2" />
+              {perfilParaEditar ? 'Atualizar Perfil' : 'Cadastrar Perfil'}
+            </Button>
+          </div>
         </form>
       </CardContent>
     </Card>

@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/
 import { useToast } from "./ui/use-toast";
 import { supabase } from '../supabaseClient';
 import { Cliente } from '../types/supabase-types';
+import { SaveIcon } from "lucide-react";
 
 const clienteSchema = z.object({
   empresa_id: z.string().uuid(),
@@ -114,7 +115,12 @@ export function ClienteForm({ clienteParaEditar, onClienteSalvo }: ClienteFormPr
               <Input id="condicao_cabelo" {...form.register("condicao_cabelo")} />
             </div>
           </div>
-          <Button type="submit" className="w-full">{clienteParaEditar ? 'Atualizar Cliente' : 'Cadastrar Cliente'}</Button>
+          <div className="flex justify-end">
+            <Button type="submit" >
+              <SaveIcon className="w-4 h-4 mr-2" />
+              {clienteParaEditar ? 'Atualizar Cliente' : 'Cadastrar Cliente'}
+            </Button>
+          </div>
         </form>
       </CardContent>
     </Card>

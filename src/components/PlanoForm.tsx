@@ -10,6 +10,7 @@ import { useToast } from "./ui/use-toast";
 import { supabase } from '../supabaseClient';
 import { Plano } from '../types/supabase-types';
 import { MultiSelect } from "./ui/multi-select";
+import { SaveIcon } from "lucide-react";
 
 const recursosDisponiveis = [
   { value: "agendamentos", label: "Agendamentos" },
@@ -127,7 +128,12 @@ export function PlanoForm({ planoParaEditar, onPlanoSalvo }: PlanoFormProps) {
               )}
             />
           </div>
-          <Button type="submit" className="w-full">{planoParaEditar ? 'Atualizar Plano' : 'Criar Plano'}</Button>
+          <div className="flex justify-end">
+            <Button type="submit">
+              <SaveIcon className="w-4 h-4 mr-2" />
+              {planoParaEditar ? 'Atualizar Plano' : 'Cadastrar Plano'}
+            </Button>
+          </div>
         </form>
       </CardContent>
     </Card>

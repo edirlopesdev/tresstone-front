@@ -10,6 +10,7 @@ import { Textarea } from "../components/ui/textarea"
 import { useToast } from "./ui/use-toast";
 import { supabase } from '../supabaseClient';
 import { HistoricoColoracao } from '../types/supabase-types';
+import { SaveIcon } from "lucide-react";
 
 const historicoColoracaoSchema = z.object({
   cliente_id: z.string().uuid(),
@@ -155,7 +156,12 @@ export function HistoricoColoracaoForm({ historicoParaEditar, onHistoricoSalvo }
             <Label htmlFor="observacoes">Observações</Label>
             <Textarea id="observacoes" {...form.register("observacoes")} />
           </div>
-          <Button type="submit" className="w-full">{historicoParaEditar ? 'Atualizar Histórico' : 'Registrar Histórico'}</Button>
+          <div className="flex justify-end">
+            <Button type="submit">
+              <SaveIcon className="w-4 h-4 mr-2" />
+              {historicoParaEditar ? 'Atualizar Histórico' : 'Cadastrar Histórico'}
+            </Button>
+          </div>
         </form>
       </CardContent>
     </Card>
