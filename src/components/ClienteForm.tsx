@@ -10,6 +10,7 @@ import { useToast } from "./ui/use-toast";
 import { supabase } from '../supabaseClient';
 import { Cliente } from '../types/supabase-types';
 import { SaveIcon, ArrowLeft } from "lucide-react";
+import { useAuth } from '../contexts/AuthContext';
 
 const clienteSchema = z.object({
   empresa_id: z.string().uuid(),
@@ -28,63 +29,87 @@ interface ClienteFormProps {
 
 export function ClienteForm({ clienteParaEditar, onClienteSalvo, onVoltar }: ClienteFormProps) {
   const { toast } = useToast();
+  const { empresaId } = useAuth();
+  
   const form = useForm<ClienteFormValues>({
     resolver: zodResolver(clienteSchema),
     defaultValues: {
-      empresa_id: "",
+      empresa_id: empresaId || "",
       nome: "",
       tipo_cabelo: "",
       condicao_cabelo: "",
     },
   });
 
+  // Este useEffect mantém o empresa_id atualizado
+  useEffect(() => {
+    if (empresaId) {
+      form.setValue('empresa_id', empresaId);
+    }
+  }, [empresaId, form]);
+
+  // Este useEffect lida com a edição de clientes
   useEffect(() => {
     if (clienteParaEditar) {
       form.reset({
-        empresa_id: clienteParaEditar.empresa_id,
+        empresa_id: empresaId || "",
         nome: clienteParaEditar.nome,
         tipo_cabelo: clienteParaEditar.tipo_cabelo || "",
         condicao_cabelo: clienteParaEditar.condicao_cabelo || "",
       });
-    } else {
-      form.reset({
-        empresa_id: "",
-        nome: "",
-        tipo_cabelo: "",
-        condicao_cabelo: "",
-      });
     }
-  }, [clienteParaEditar, form]);
+  }, [clienteParaEditar, empresaId, form]);
 
   const onSubmit = async (data: ClienteFormValues) => {
+    if (!empresaId) {
+      toast({
+        title: "Erro",
+        description: "ID da empresa não encontrado",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
+      const clienteData = {
+        ...data,
+        empresa_id: empresaId,
+      };
+
       let result;
       if (clienteParaEditar) {
         result = await supabase
           .from('clientes')
-          .update(data)
+          .update(clienteData)
           .eq('id', clienteParaEditar.id)
           .single();
       } else {
         result = await supabase
           .from('clientes')
-          .insert(data)
+          .insert(clienteData)
           .single();
       }
 
       if (result.error) throw result.error;
 
       toast({
-        title: clienteParaEditar ? "Cliente atualizado" : "Cliente cadastrado",
-        description: clienteParaEditar ? "O cliente foi atualizado com sucesso." : "O cliente foi cadastrado com sucesso.",
+        title: clienteParaEditar ? "Cliente atualizado" : "Cliente criado",
+        description: clienteParaEditar ? "O cliente foi atualizado com sucesso." : "O cliente foi criado com sucesso.",
       });
 
-      form.reset();
+      form.reset({
+        empresa_id: empresaId,
+        nome: "",
+        tipo_cabelo: "",
+        condicao_cabelo: "",
+      });
+      
       onClienteSalvo();
     } catch (error) {
+      console.error('Erro ao salvar cliente:', error);
       toast({
         title: "Erro",
-        description: `Ocorreu um erro ao ${clienteParaEditar ? 'atualizar' : 'cadastrar'} o cliente.`,
+        description: `Ocorreu um erro ao ${clienteParaEditar ? 'atualizar' : 'criar'} o cliente: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
         variant: "destructive",
       });
     }
@@ -95,19 +120,19 @@ export function ClienteForm({ clienteParaEditar, onClienteSalvo, onVoltar }: Cli
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle>{clienteParaEditar ? 'Editar Cliente' : 'Novo Cliente'}</CardTitle>
-          <CardDescription>{clienteParaEditar ? 'Edite os dados do cliente.' : 'Cadastre um novo cliente.'}</CardDescription>
+          <CardDescription>{clienteParaEditar ? 'Edite os dados do cliente.' : 'Adicione um novo cliente.'}</CardDescription>
         </div>
       </CardHeader>
       <CardContent>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Input type="hidden" {...form.register("empresa_id")} />
             <div>
-              <Label htmlFor="empresa_id">Empresa</Label>
-              <Input id="empresa_id" {...form.register("empresa_id")} />
-            </div>
-            <div>
-              <Label htmlFor="nome">Nome</Label>
+              <Label htmlFor="nome">Nome do Cliente</Label>
               <Input id="nome" {...form.register("nome")} />
+              {form.formState.errors.nome && (
+                <p className="text-red-500">{form.formState.errors.nome.message}</p>
+              )}
             </div>
             <div>
               <Label htmlFor="tipo_cabelo">Tipo de Cabelo</Label>

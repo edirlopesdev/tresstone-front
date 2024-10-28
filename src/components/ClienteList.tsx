@@ -6,6 +6,7 @@ import { Edit, Trash2, PlusCircle } from 'lucide-react';
 import { Button } from "./ui/button";
 import { Cliente } from '../types/supabase-types';
 import { useToast } from "./ui/use-toast";
+import { useAuth } from '../contexts/AuthContext';
 
 interface ClienteListProps {
   onEditCliente: (cliente: Cliente) => void;
@@ -17,17 +18,24 @@ export function ClienteList({ onEditCliente, onNovoCliente, triggerRefetch }: Cl
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { empresaId, loading: authLoading } = useAuth();
 
   useEffect(() => {
-    fetchClientes();
-  }, [triggerRefetch]);
+    if (!authLoading && empresaId) {
+      fetchClientes();
+    }
+  }, [triggerRefetch, empresaId, authLoading]);
 
   async function fetchClientes() {
+    if (!empresaId) return;
+    
     try {
       setLoading(true);
       const { data, error } = await supabase
         .from('clientes')
-        .select('*');
+        .select('*')
+        .eq('empresa_id', empresaId)
+        .order('nome');
 
       if (error) throw error;
       setClientes(data || []);
@@ -72,13 +80,17 @@ export function ClienteList({ onEditCliente, onNovoCliente, triggerRefetch }: Cl
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Lista de Clientes</CardTitle>
-        <Button onClick={onNovoCliente}>
+        <Button onClick={onNovoCliente} disabled={!empresaId}>
           <PlusCircle className="w-4 h-4 mr-2" />
           Incluir
         </Button>
       </CardHeader>
       <CardContent>
-        {loading ? (
+        {authLoading ? (
+          <p>Carregando autenticação...</p>
+        ) : !empresaId ? (
+          <p>Empresa não identificada</p>
+        ) : loading ? (
           <p>Carregando clientes...</p>
         ) : (
           <div className="overflow-x-auto">
