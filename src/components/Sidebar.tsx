@@ -21,6 +21,7 @@ import {
 } from "./ui/dropdown-menu"
 import { Avatar, AvatarFallback } from "./ui/avatar"
 import { signOut } from '../auth/auth';
+import { useAuth } from '../contexts/AuthContext';
 
 const menuItems = [
   { title: "Dashboard", icon: Home, url: "/dashboard" },
@@ -36,10 +37,18 @@ const menuItems = [
 export default function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const handleSignOut = async () => {
     await signOut();
     navigate('/login');
+  };
+
+  const getInitials = (email: string) => {
+    return email
+      .split('@')[0]
+      .slice(0, 2)
+      .toUpperCase();
   };
 
   return (
@@ -65,19 +74,19 @@ export default function Sidebar() {
       <div className="absolute bottom-0 w-full p-4">
         <DropdownMenu>
           <DropdownMenuTrigger>
-            <button className="flex items-center space-x-2">
+            <button className="flex items-center space-x-2 hover:opacity-80 cursor-pointer">
               <Avatar>
-                <AvatarFallback>JD</AvatarFallback>
+                <AvatarFallback>{user?.email ? getInitials(user.email) : 'U'}</AvatarFallback>
               </Avatar>
-              {!isCollapsed && <span>John Doe</span>}
+              {!isCollapsed && <span className="truncate">{user?.email || 'Usuário'}</span>}
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-56">
             <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Perfil</DropdownMenuItem>
-            <DropdownMenuItem>Configurações</DropdownMenuItem>
-            <DropdownMenuItem onClick={handleSignOut}>Sair</DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer">Perfil</DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer">Configurações</DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer" onClick={handleSignOut}>Sair</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
