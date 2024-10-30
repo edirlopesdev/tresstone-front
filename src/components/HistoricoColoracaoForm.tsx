@@ -317,6 +317,7 @@ export function HistoricoColoracaoForm({ historicoParaEditar, onHistoricoSalvo, 
               onColorSelect={handleColorSelection}
               onCalculate={handleColorCalculation}
               fotoAntesUrl={localFotoAntes || form.watch("foto_antes")}
+              fotoDepoisUrl={form.watch("foto_depois")}
             />
 
             {/* Mostrar erros de validação */}
