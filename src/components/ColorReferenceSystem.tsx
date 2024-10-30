@@ -405,23 +405,45 @@ export function ColorReferenceSystem({
           value={selectedBase} 
           onValueChange={handleBaseChange}
         >
-          <SelectTrigger>
-            <SelectValue placeholder="Selecione a cor base" />
+          <SelectTrigger className="bg-white border-gray-200 shadow-sm hover:bg-gray-50">
+            <SelectValue 
+              placeholder="Selecione a cor base"
+            >
+              {selectedBase && (
+                <div className="flex items-center gap-2">
+                  <div 
+                    className="w-4 h-4 rounded-full flex-shrink-0 border border-gray-200 shadow-sm" 
+                    style={{
+                      backgroundColor: `rgb(${NIVEIS_CORES.find(n => n.valor === selectedBase)?.rgb.R || 0},${
+                        NIVEIS_CORES.find(n => n.valor === selectedBase)?.rgb.G || 0},${
+                        NIVEIS_CORES.find(n => n.valor === selectedBase)?.rgb.B || 0})`
+                    }}
+                  />
+                  <span>
+                    {selectedBase} - {NIVEIS_CORES.find(n => n.valor === selectedBase)?.descricao}
+                  </span>
+                </div>
+              )}
+            </SelectValue>
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-white border border-gray-200 shadow-lg">
             {NIVEIS_CORES.map((nivel) => (
               <SelectItem 
                 key={nivel.valor} 
                 value={nivel.valor}
-                className="flex items-center gap-2"
+                className="hover:bg-gray-100 cursor-pointer focus:bg-gray-100"
               >
-                <div 
-                  className="w-4 h-4 rounded-full" 
-                  style={{
-                    backgroundColor: `rgb(${nivel.rgb.R},${nivel.rgb.G},${nivel.rgb.B})`
-                  }}
-                />
-                {nivel.descricao}
+                <div className="flex items-center gap-2 py-1">
+                  <div 
+                    className="w-4 h-4 rounded-full flex-shrink-0 border border-gray-200 shadow-sm" 
+                    style={{
+                      backgroundColor: `rgb(${nivel.rgb.R},${nivel.rgb.G},${nivel.rgb.B})`
+                    }}
+                  />
+                  <span className="text-gray-700">
+                    {nivel.valor} - {nivel.descricao}
+                  </span>
+                </div>
               </SelectItem>
             ))}
           </SelectContent>
@@ -434,20 +456,55 @@ export function ColorReferenceSystem({
           value={selectedTarget} 
           onValueChange={handleTargetChange}
         >
-          <SelectTrigger>
-            <SelectValue placeholder="Selecione a cor desejada" />
+          <SelectTrigger className="bg-white border-gray-200 shadow-sm hover:bg-gray-50">
+            <SelectValue 
+              placeholder="Selecione a cor desejada"
+            >
+              {selectedTarget && (
+                <div className="flex items-center gap-2">
+                  <div 
+                    className="w-4 h-4 rounded-full flex-shrink-0 border border-gray-200 shadow-sm" 
+                    style={{
+                      backgroundColor: `rgb(${NIVEIS_CORES.find(n => n.valor === selectedTarget)?.rgb.R || 0},${
+                        NIVEIS_CORES.find(n => n.valor === selectedTarget)?.rgb.G || 0},${
+                        NIVEIS_CORES.find(n => n.valor === selectedTarget)?.rgb.B || 0})`
+                    }}
+                  />
+                  <span>
+                    {selectedTarget} - {NIVEIS_CORES.find(n => n.valor === selectedTarget)?.descricao}
+                  </span>
+                </div>
+              )}
+            </SelectValue>
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-white border border-gray-200 shadow-lg">
             {NIVEIS_CORES.map((nivel) => (
-              <SelectItem key={nivel.valor} value={nivel.valor}>
-                {nivel.descricao}
+              <SelectItem 
+                key={nivel.valor} 
+                value={nivel.valor}
+                className="hover:bg-gray-100 cursor-pointer focus:bg-gray-100"
+              >
+                <div className="flex items-center gap-2 py-1">
+                  <div 
+                    className="w-4 h-4 rounded-full flex-shrink-0 border border-gray-200 shadow-sm" 
+                    style={{
+                      backgroundColor: `rgb(${nivel.rgb.R},${nivel.rgb.G},${nivel.rgb.B})`
+                    }}
+                  />
+                  <span className="text-gray-700">
+                    {nivel.valor} - {nivel.descricao}
+                  </span>
+                </div>
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
-      <Button onClick={calcularClareamento}>
+      <Button 
+        onClick={calcularClareamento}
+        className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-md"
+      >
         Calcular
       </Button>
     </div>
