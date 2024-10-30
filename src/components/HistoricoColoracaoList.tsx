@@ -126,8 +126,8 @@ export function HistoricoColoracaoList({ onEditHistorico, onNovoHistorico, trigg
                     <TableCell className="font-medium">
                       {(historico as any).clientes?.nome || 'Cliente não encontrado'}
                     </TableCell>
-                    <TableCell>{historico.cor_base}</TableCell>
-                    <TableCell>{historico.cor_alvo}</TableCell>
+                    <TableCell>{historico.cor_base_nivel}</TableCell>
+                    <TableCell>{historico.cor_alvo_nivel}</TableCell>
                     <TableCell>{historico.produtos_usados || '-'}</TableCell>
                     <TableCell>{historico.tecnicas_usadas || '-'}</TableCell>
                     <TableCell>{historico.observacoes || '-'}</TableCell>

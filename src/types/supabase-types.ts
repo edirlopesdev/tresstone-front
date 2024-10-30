@@ -31,12 +31,22 @@ export interface HistoricoColoracao {
   id: string; // UUID
   cliente_id: string; // UUID
   usuario_id: string; // UUID
-  cor_base: string;
-  cor_alvo: string;
-  produtos_usados: string | null; // jsonb
+  cor_base_nivel: string;
+  cor_alvo_nivel: string;
+  produtos_usados: string | null;
   tecnicas_usadas: string | null;
   observacoes: string | null;
-  data: string; // timestamp with time zone
+  data: string;
+  foto_antes: string | null;
+  foto_depois: string | null;
+}
+
+export interface ResultadoClareamento {
+  niveis_necessarios: number;
+  volume_oxidante: number;
+  tempo_estimado: number;
+  fundo_revelacao: string;
+  produtos_recomendados: string[];
 }
 
 export interface Plano {
@@ -56,6 +66,14 @@ export interface Produto {
   tipo: string;
   codigo_cor: string | null;
   criado_em: string | null; // timestamp with time zone
+}
+
+// Adicionar novas interfaces
+export interface NivelBase {
+  id: string;
+  nivel: number;
+  descricao: string;
+  cor_hex: string;
 }
 
 // Adicione outras interfaces para as demais tabelas do seu banco de dados
