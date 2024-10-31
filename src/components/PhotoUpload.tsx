@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { supabase } from '../supabaseClient';
+import { useState, useRef } from 'react';
 import { useToast } from './ui/use-toast';
 import { Loader2 } from "lucide-react";
 
@@ -11,6 +10,7 @@ interface PhotoUploadProps {
 export function PhotoUpload({ onUpload, clienteId }: PhotoUploadProps) {
   const { toast } = useToast();
   const [isUploading, setIsUploading] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleUpload = async (file: File) => {
     if (!clienteId) {
@@ -30,6 +30,11 @@ export function PhotoUpload({ onUpload, clienteId }: PhotoUploadProps) {
       // Passar a URL local junto com a função de upload
       onUpload(localUrl, file);
       
+      // Limpar o input após o upload bem-sucedido
+      if (inputRef.current) {
+        inputRef.current.value = '';
+      }
+      
     } catch (error) {
       console.error('Erro no upload:', error);
       toast({
@@ -43,11 +48,12 @@ export function PhotoUpload({ onUpload, clienteId }: PhotoUploadProps) {
   };
 
   return (
-    <div className="space-y-4">
+    <div>
       <label className="block">
         <span className="sr-only">Escolher foto</span>
         <div className="relative">
           <input
+            ref={inputRef}
             type="file"
             className={`block w-full text-sm text-slate-500
               file:mr-4 file:py-2 file:px-4
@@ -71,7 +77,7 @@ export function PhotoUpload({ onUpload, clienteId }: PhotoUploadProps) {
         </div>
       </label>
       {!clienteId && (
-        <p className="text-sm text-red-500">
+        <p className="text-sm text-red-500 mt-1">
           Selecione um cliente antes de fazer upload de fotos
         </p>
       )}

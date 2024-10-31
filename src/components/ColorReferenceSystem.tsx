@@ -4,14 +4,15 @@ import { Button } from './ui/button';
 import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { average, standardDeviation } from 'simple-statistics';
+import { ImagePreviewModal } from '../components/ImagePreviewModal';
 
 interface ColorReferenceProps {
   corBase: string;
   corDesejada: string;
   onColorSelect: (base: string, target: string) => void;
   onCalculate: (resultado: ResultadoClareamento) => void;
-  fotoAntesUrl?: string;
-  fotoDepoisUrl?: string;
+  fotoAntesUrl?: string | null;
+  fotoDepoisUrl?: string | null;
 }
 
 const NIVEIS_CORES = [
@@ -327,11 +328,17 @@ export function ColorReferenceSystem({
   const [selectedTarget, setSelectedTarget] = useState(corDesejada || '');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [displayedImage, setDisplayedImage] = useState<string | null>(null);
 
   useEffect(() => {
     setSelectedBase(corBase || '');
     setSelectedTarget(corDesejada || '');
   }, [corBase, corDesejada]);
+
+  useEffect(() => {
+    setDisplayedImage(fotoAntesUrl || null);
+  }, [fotoAntesUrl]);
 
   useEffect(() => {
     if (fotoAntesUrl) {
@@ -344,7 +351,6 @@ export function ColorReferenceSystem({
           console.log("Cor detectada (RGB):", corDetectada);
           const nivelDetectado = encontrarCorMaisProxima(corDetectada);
           console.log("Nível detectado:", nivelDetectado);
-          console.log("Cor correspondente:", NIVEIS_CORES.find(n => n.valor === nivelDetectado));
           
           if (nivelDetectado) {
             handleBaseChange(nivelDetectado);
@@ -393,15 +399,17 @@ export function ColorReferenceSystem({
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-6">
-        {/* Coluna da Esquerda - Foto Antes e Cor Base */}
         <div className="space-y-4">
           <div className="flex items-center gap-4">
-            {fotoAntesUrl && (
-              <div className="flex-shrink-0">
+            {displayedImage && (
+              <div 
+                className="flex-shrink-0 cursor-pointer"
+                onClick={() => setSelectedImage(displayedImage)}
+              >
                 <img 
-                  src={fotoAntesUrl} 
+                  src={displayedImage} 
                   alt="Foto Antes" 
-                  className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
+                  className="w-16 h-16 rounded-full object-cover border-2 border-gray-200 hover:border-blue-500 transition-colors"
                 />
               </div>
             )}
@@ -466,15 +474,17 @@ export function ColorReferenceSystem({
           </div>
         </div>
 
-        {/* Coluna da Direita - Foto Depois e Cor Desejada */}
         <div className="space-y-4">
           <div className="flex items-center gap-4">
             {fotoDepoisUrl && (
-              <div className="flex-shrink-0">
+              <div 
+                className="flex-shrink-0 cursor-pointer"
+                onClick={() => setSelectedImage(fotoDepoisUrl)}
+              >
                 <img 
                   src={fotoDepoisUrl} 
                   alt="Foto Depois" 
-                  className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
+                  className="w-16 h-16 rounded-full object-cover border-2 border-gray-200 hover:border-blue-500 transition-colors"
                 />
               </div>
             )}
@@ -533,9 +543,16 @@ export function ColorReferenceSystem({
       <Button 
         onClick={calcularClareamento}
         className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-md"
+        disabled={!selectedBase || !selectedTarget}
       >
         Calcular
       </Button>
+
+      <ImagePreviewModal
+        isOpen={!!selectedImage}
+        onClose={() => setSelectedImage(null)}
+        imageUrl={selectedImage || ''}
+      />
     </div>
   );
 }

@@ -14,6 +14,7 @@ import { SaveIcon, ArrowLeft, Loader2 } from "lucide-react";
 import { useAuth } from '../contexts/AuthContext';
 import { PhotoUpload } from './PhotoUpload';
 import { ColorReferenceSystem } from './ColorReferenceSystem';
+import { ClienteSearch } from './ClienteSearch';
 
 const historicoSchema = z.object({
   cliente_id: z.string().uuid("ID do cliente inválido"),
@@ -80,7 +81,8 @@ export function HistoricoColoracaoForm({ historicoParaEditar, onHistoricoSalvo, 
   }, [historicoParaEditar, user, form]);
 
   const [isSaving, setIsSaving] = useState(false);
-  const [localFotoAntes, setLocalFotoAntes] = useState<string | null>(null);
+  const [localFotoAntes, setLocalFotoAntes] = useState<string | undefined>(undefined);
+  const [localFotoDepois, setLocalFotoDepois] = useState<string | undefined>(undefined);
 
   const onSubmit = async (data: HistoricoFormValues) => {
     if (!user?.id) return;
@@ -164,8 +166,13 @@ export function HistoricoColoracaoForm({ historicoParaEditar, onHistoricoSalvo, 
 
   const handlePhotoUpload = async (localUrl: string, file: File, type: 'antes' | 'depois') => {
     try {
+      // Limpar a foto anterior quando uma nova é selecionada
       if (type === 'antes') {
-        setLocalFotoAntes(localUrl);
+        setLocalFotoAntes(undefined);
+        setTimeout(() => setLocalFotoAntes(localUrl), 0);
+      } else {
+        setLocalFotoDepois(undefined);
+        setTimeout(() => setLocalFotoDepois(localUrl), 0);
       }
 
       // Validações do arquivo
@@ -178,10 +185,7 @@ export function HistoricoColoracaoForm({ historicoParaEditar, onHistoricoSalvo, 
       }
 
       const fileExt = file.name.split('.').pop()?.toLowerCase();
-      const date = new Date();
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const fileName = `${form.watch("cliente_id")}/${year}/${month}/${Date.now()}.${fileExt}`;
+      const fileName = `${form.watch("cliente_id")}/${Date.now()}.${fileExt}`;
 
       const { data, error: uploadError } = await supabase.storage
         .from('client-photos')
@@ -214,6 +218,13 @@ export function HistoricoColoracaoForm({ historicoParaEditar, onHistoricoSalvo, 
         description: error instanceof Error ? error.message : 'Erro ao fazer upload da foto',
         variant: "destructive",
       });
+      
+      // Limpar a URL local em caso de erro
+      if (type === 'antes') {
+        setLocalFotoAntes(undefined);
+      } else {
+        setLocalFotoDepois(undefined);
+      }
     }
   };
 
@@ -234,16 +245,16 @@ export function HistoricoColoracaoForm({ historicoParaEditar, onHistoricoSalvo, 
             
             <div>
               <Label htmlFor="cliente_id">Cliente</Label>
-              <Input 
-                id="cliente_id" 
-                {...form.register("cliente_id")}
-                onChange={(e) => {
-                  form.setValue("cliente_id", e.target.value);
-                  console.log("Cliente ID:", e.target.value); // Debug
+              <ClienteSearch
+                selectedClienteId={form.watch("cliente_id")}
+                onClienteSelect={(clienteId) => {
+                  form.setValue("cliente_id", clienteId, { shouldValidate: true });
                 }}
               />
               {form.formState.errors.cliente_id && (
-                <p className="text-red-500">{form.formState.errors.cliente_id.message}</p>
+                <p className="text-red-500 text-sm mt-1">
+                  {form.formState.errors.cliente_id.message}
+                </p>
               )}
             </div>
 
@@ -286,13 +297,6 @@ export function HistoricoColoracaoForm({ historicoParaEditar, onHistoricoSalvo, 
                   clienteId={form.watch("cliente_id")}
                   onUpload={(localUrl, file) => handlePhotoUpload(localUrl, file, 'antes')}
                 />
-                {form.watch("foto_antes") && (
-                  <img 
-                    src={form.watch("foto_antes")} 
-                    alt="Antes" 
-                    className="mt-2 w-full max-w-[200px] rounded"
-                  />
-                )}
               </div>
               
               <div>
@@ -301,13 +305,6 @@ export function HistoricoColoracaoForm({ historicoParaEditar, onHistoricoSalvo, 
                   clienteId={form.watch("cliente_id")}
                   onUpload={(localUrl, file) => handlePhotoUpload(localUrl, file, 'depois')}
                 />
-                {form.watch("foto_depois") && (
-                  <img 
-                    src={form.watch("foto_depois")} 
-                    alt="Depois" 
-                    className="mt-2 w-full max-w-[200px] rounded"
-                  />
-                )}
               </div>
             </div>
 
@@ -316,8 +313,8 @@ export function HistoricoColoracaoForm({ historicoParaEditar, onHistoricoSalvo, 
               corDesejada={form.watch("cor_alvo_nivel")}
               onColorSelect={handleColorSelection}
               onCalculate={handleColorCalculation}
-              fotoAntesUrl={localFotoAntes || form.watch("foto_antes")}
-              fotoDepoisUrl={form.watch("foto_depois")}
+              fotoAntesUrl={localFotoAntes}
+              fotoDepoisUrl={localFotoDepois}
             />
 
             {/* Mostrar erros de validação */}
